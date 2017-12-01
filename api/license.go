@@ -23,35 +23,35 @@ var apis = map[string]string{
 }
 
 var licenseCol = map[string]licenseFormat{
-	"other": licenseFormat{
+	"other": {
 		name:  "Other",
 		color: color.FgBlue,
 	},
-	"mit": licenseFormat{
+	"mit": {
 		name:  "MIT",
 		color: color.FgGreen,
 	},
-	"lgpl-3.0": licenseFormat{
+	"lgpl-3.0": {
 		name:  "LGPL-3.0",
 		color: color.FgCyan,
 	},
-	"mpl-2.0": licenseFormat{
+	"mpl-2.0": {
 		name:  "MPL-2.0",
 		color: color.FgHiBlue,
 	},
-	"agpl-3.0": licenseFormat{
+	"agpl-3.0": {
 		name:  "AGPL-3.0",
 		color: color.FgHiCyan,
 	},
-	"unlicense": licenseFormat{
+	"unlicense": {
 		name:  "Unlicense",
 		color: color.FgHiRed,
 	},
-	"apache-2.0": licenseFormat{
+	"apache-2.0": {
 		name:  "Apache-2.0",
 		color: color.FgHiGreen,
 	},
-	"gpl-3.0": licenseFormat{
+	"gpl-3.0": {
 		name:  "GPL-3.0",
 		color: color.FgHiMagenta,
 	},

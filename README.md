@@ -1,5 +1,9 @@
 # glice
 
+[![Build Status](https://travis-ci.org/ribice/glice.svg?branch=master)](https://travis-ci.org/ribice/glice)
+[![Coverage Status](https://coveralls.io/repos/github/ribice/glice/badge.svg?branch=master)](https://coveralls.io/github/ribice/glice?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ribice/glice)](https://goreportcard.com/report/github.com/ribice/glice)
+
 Golang license and dependency checker. Prints list of all dependencies (both from std and 3rd party), number of times used, their license and saves all the license files in /licenses.
 
 ## Introduction
@@ -48,7 +52,7 @@ All flags are optional. Glice supports the following flags:
 - v [boolean - verbose] // by default, github.com/author/repo/http and github.com/author/repo/http/middleware are counted as 2 times github.com/author/repo, and that's being displayed. With verbose, they are counted and shown separately.
 - r [boolean - recursive] // returns dependencies of dependencies (single level only)
 - f [boolean - fileWrite] // writes all license files inside /licenses folder
-- i [string - ignoreFolders] // list of comma seperated folders that should be ignored
+- i [string - ignoreFolders] // list of comma-separated folders that should be ignored
 - gh [string - githubAPIKey] // used to increase GitHub API's rate limit from 60req/h to 5000req/h
 ```
 
@@ -56,8 +60,9 @@ Don't forget `-help` flag for detailed usage information.
 
 ## Sample output
 
-Executing glice on github.com/qiangxue/golang-restful-starter-kit prints:
+Executing glice on github.com/qiangxue/golang-restful-starter-kit prints (with additional colors for links and licenses):
 
+```
 +------------------------------------+-------+--------------------------------------------+---------+
 |             DEPENDENCY             | COUNT |                  REPOURL                   | LICENSE |
 +------------------------------------+-------+--------------------------------------------+---------+
@@ -79,10 +84,11 @@ Executing glice on github.com/qiangxue/golang-restful-starter-kit prints:
 | strings                            |     3 |
 | os                                 |     1 |
 +------------------------------------+-------+--------------------------------------------+---------+
+```
 
 ## To-Do
 
-- [ ] Improve tests and test coverage
+- [ ] Improve tests and code coverage
 - [ ] Add flag to disable dependencies from test files
 - [ ] Implement license checking for projects hosted on GitLab.com
 - [ ] Implement license checking for projects hosted on Bitbucket.org

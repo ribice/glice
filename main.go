@@ -41,7 +41,7 @@ func main() {
 		incStdLib  = flag.Bool("s", false, "Include standard library dependencies")
 		recursive  = flag.Bool("r", false, "Gets single level recursive dependencies")
 		fileWrite  = flag.Bool("f", false, "Writes all licenses to files")
-		ignoreDirs = flag.String("i", "", "Comma seperated list of folders that should be ignored")
+		ignoreDirs = flag.String("i", "", "Comma separated list of folders that should be ignored")
 		ghkey      = flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
 		depth      = "Imports"
 		apiKeys    = map[string]string{}
@@ -122,7 +122,7 @@ func skipHidden(name string) bool {
 
 func (ds *deps) getDeps(basedir, dirname, depth string, bdl int, incStdLib, verbose bool) {
 
-	// used for comparing dependency with current project minus the file seperator
+	// used for comparing dependency with current project minus the file separator
 	if dirname == "."+fs {
 		dirname = ""
 	}
