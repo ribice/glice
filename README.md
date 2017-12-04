@@ -66,23 +66,23 @@ Executing glice on github.com/qiangxue/golang-restful-starter-kit prints (with a
 +------------------------------------+-------+--------------------------------------------+---------+
 |             DEPENDENCY             | COUNT |                  REPOURL                   | LICENSE |
 +------------------------------------+-------+--------------------------------------------+---------+
-| fmt                                |     5 |
+| fmt                                |     5 |                                            |         |
 | github.com/Sirupsen/logrus         |     2 | https://github.com/Sirupsen/logrus         | MIT     |
 | github.com/go-ozzo/ozzo-dbx        |     3 | https://github.com/go-ozzo/ozzo-dbx        | MIT     |
 | github.com/go-ozzo/ozzo-routing    |     9 | https://github.com/go-ozzo/ozzo-routing    | MIT     |
 | github.com/lib/pq                  |     2 | https://github.com/lib/pq                  | MIT     |
-| net/http                           |     3 |
+| net/http                           |     3 |                                            |         |
 | github.com/dgrijalva/jwt-go        |     1 | https://github.com/dgrijalva/jwt-go        | MIT     |
-| strconv                            |     1 |
-| time                               |     2 |
-| database/sql                       |     1 |
+| strconv                            |     1 |                                            |         |
+| time                               |     2 |                                            |         |
+| database/sql                       |     1 |                                            |         |
 | github.com/go-ozzo/ozzo-validation |     3 | https://github.com/go-ozzo/ozzo-validation | MIT     |
 | github.com/spf13/viper             |     1 | https://github.com/spf13/viper             | MIT     |
-| gopkg.in/yaml.v2                   |     1 |
-| io/ioutil                          |     2 |
-| sort                               |     1 |
-| strings                            |     3 |
-| os                                 |     1 |
+| gopkg.in/yaml.v2                   |     1 |                                            |         |
+| io/ioutil                          |     2 |                                            |         |
+| sort                               |     1 |                                            |         |
+| strings                            |     3 |                                            |         |
+| os                                 |     1 |                                            |         |
 +------------------------------------+-------+--------------------------------------------+---------+
 ```
 
