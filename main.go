@@ -203,13 +203,16 @@ func (ds *deps) getLicensesWriteStd(apiKeys map[string]string, fw bool) {
 	}
 	for _, v := range ds.deps {
 		str := []string{v.name, strconv.Itoa(v.count + 1)}
-		if v.license != nil && !v.license.Exists {
+		switch {
+		case v.license != nil && !v.license.Exists:
 			keepdir = true
 			err := v.license.GetLicenses(c, apiKeys, fw)
 			if err != nil {
 				continue
 			}
 			str = append(str, color.BlueString(v.license.URL), v.license.Shortname)
+		default:
+			str = append(str, "", "")
 		}
 		table.Append(str)
 	}
