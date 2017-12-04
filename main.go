@@ -210,6 +210,8 @@ func (ds *deps) getLicensesWriteStd(apiKeys map[string]string, fw bool) {
 				continue
 			}
 			str = append(str, color.BlueString(v.license.URL), v.license.Shortname)
+		} else {
+			str = append(str, "", "")
 		}
 		table.Append(str)
 	}
