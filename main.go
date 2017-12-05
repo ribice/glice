@@ -37,12 +37,12 @@ func main() {
 	var ds deps
 
 	var (
-		verbose    = flag.Bool("v", false, "Include detailed imports (github.com/author/repo/net/http, github.com/author/repo/net/middleware ... instead of only github.com/author/repo")
-		incStdLib  = flag.Bool("s", false, "Include standard library dependencies")
-		recursive  = flag.Bool("r", false, "Gets single level recursive dependencies")
-		fileWrite  = flag.Bool("f", false, "Writes all licenses to files")
-		ignoreDirs = flag.String("i", "", "Comma separated list of folders that should be ignored")
-		ghkey      = flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
+		verbose    = *flag.Bool("v", false, "Include detailed imports (github.com/author/repo/net/http, github.com/author/repo/net/middleware ... instead of only github.com/author/repo")
+		incStdLib  = *flag.Bool("s", false, "Include standard library dependencies")
+		recursive  = *flag.Bool("r", false, "Gets single level recursive dependencies")
+		fileWrite  = *flag.Bool("f", false, "Writes all licenses to files")
+		ignoreDirs = *flag.String("i", "", "Comma separated list of folders that should be ignored")
+		ghkey      = *flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
 		depth      = "Imports"
 		apiKeys    = map[string]string{}
 	)
@@ -54,23 +54,23 @@ func main() {
 	basedir := getCurrentFolder()
 	bdl := len(basedir) - 1
 
-	if *recursive {
+	if recursive {
 		depth = "Deps"
 	}
 
-	if *fileWrite {
+	if fileWrite {
 		os.Mkdir("licenses", 0777)
 	}
 
-	if *ghkey != "" {
-		apiKeys["github.com"] = *ghkey
+	if ghkey != "" {
+		apiKeys["github.com"] = ghkey
 	}
 
-	for _, v := range getFolders(*ignoreDirs) {
+	for _, v := range getFolders(ignoreDirs) {
 		// implement concurrency here
-		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose)
+		ds.getDeps(basedir, v, depth, bdl, incStdLib, verbose)
 	}
-	ds.getLicensesWriteStd(apiKeys, *fileWrite)
+	ds.getLicensesWriteStd(apiKeys, fileWrite)
 
 }
 
