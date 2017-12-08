@@ -60,10 +60,6 @@ func main() {
 		depth = "Deps"
 	}
 
-	if *fileWrite {
-		os.Mkdir("licenses", 0777)
-	}
-
 	if *ghkey != "" {
 		apiKeys["github.com"] = *ghkey
 	}
@@ -208,6 +204,11 @@ func (ds *deps) getLicensesWriteStd(apiKeys map[string]string, fw bool) {
 
 	var keepdir bool
 	c := context.Background()
+
+	if fw {
+		os.Mkdir("licenses", 0777)
+	}
+
 	table := tablewriter.NewWriter(os.Stdout)
 	if len(ds.deps) > 0 {
 		table.SetHeader([]string{"Dependency", "Count", "RepoURL", "License"})
@@ -216,11 +217,11 @@ func (ds *deps) getLicensesWriteStd(apiKeys map[string]string, fw bool) {
 		str := []string{v.name, strconv.Itoa(v.count + 1)}
 		switch {
 		case v.license != nil && !v.license.Exists:
-			keepdir = true
 			err := v.license.GetLicenses(c, apiKeys, fw)
 			if err != nil {
 				continue
 			}
+			keepdir = true
 			str = append(str, color.BlueString(v.license.URL), v.license.Shortname)
 		default:
 			str = append(str, "", "")

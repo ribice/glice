@@ -102,7 +102,7 @@ Executing glice on github.com/qiangxue/golang-restful-starter-kit prints (with a
 - [ ] Implement license checking for projects hosted on GitLab.com
 - [ ] Implement license checking for projects hosted on Bitbucket.org
 - [ ] Implement license checking for projects hosted on other third party sites (e.g. gitea.io, gogs.io)
-- [ ] Add ability to send path of project via flag
+- [x] Add ability to send path of project via flag
 - [ ] Remove dependency on go-github
 - [ ] Implement concurrency
 - [ ] Add naming option when saving licenses to files (currently author-repo-license.MD)
