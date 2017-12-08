@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"context"
 	"flag"
+	"fmt"
+	"go/build"
 	"log"
 	"os"
 	"os/exec"
@@ -36,12 +38,13 @@ func main() {
 	var ds deps
 
 	var (
-		verbose    = *flag.Bool("v", false, "Include detailed imports (github.com/author/repo/net/http, github.com/author/repo/net/middleware ... instead of only github.com/author/repo")
-		incStdLib  = *flag.Bool("s", false, "Include standard library dependencies")
-		recursive  = *flag.Bool("r", false, "Gets single level recursive dependencies")
-		fileWrite  = *flag.Bool("f", false, "Writes all licenses to files")
-		ignoreDirs = *flag.String("i", "", "Comma separated list of folders that should be ignored")
-		ghkey      = *flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
+		verbose    = flag.Bool("v", false, "Include detailed imports (github.com/author/repo/net/http, github.com/author/repo/net/middleware ... instead of only github.com/author/repo")
+		incStdLib  = flag.Bool("s", false, "Include standard library dependencies")
+		recursive  = flag.Bool("r", false, "Gets single level recursive dependencies")
+		fileWrite  = flag.Bool("f", false, "Writes all licenses to files")
+		ignoreDirs = flag.String("i", "", "Comma separated list of folders that should be ignored")
+		ghkey      = flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
+		path       = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/")`)
 		depth      = "Imports"
 		apiKeys    = map[string]string{}
 	)
@@ -50,45 +53,57 @@ func main() {
 
 	// Gets current folder in $GOPATH
 
-	basedir := getCurrentFolder()
+	fullPath := getCurrentFolder(*path)
+	basedir := strings.Split(fullPath, "src"+fs)[1]
 	bdl := len(basedir) - 1
 
-	if recursive {
+	if *recursive {
 		depth = "Deps"
 	}
 
-	if fileWrite {
+	if *fileWrite {
 		os.Mkdir("licenses", 0777)
 	}
 
-	if ghkey != "" {
-		apiKeys["github.com"] = ghkey
+	if *ghkey != "" {
+		apiKeys["github.com"] = *ghkey
 	}
 
-	for _, v := range getFolders(ignoreDirs) {
+	// fmt.Println(fullPath)
+	fmt.Println(getFolders(fullPath, *ignoreDirs))
+
+	for _, v := range getFolders(fullPath, *ignoreDirs) {
 		// implement concurrency here
-		ds.getDeps(basedir, v, depth, bdl, incStdLib, verbose)
+		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose)
 	}
-	ds.getLicensesWriteStd(apiKeys, fileWrite)
+	ds.getLicensesWriteStd(apiKeys, *fileWrite)
 
 }
 
-func getCurrentFolder() string {
+func getCurrentFolder(path string) string {
+
+	if path != "" {
+		if !strings.HasSuffix(path, fs) {
+			path += fs
+		}
+		return filepath.Join(build.Default.GOPATH, "src", path)
+	}
 
 	cf, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
-	return strings.TrimPrefix(strings.Split(cf, "src")[1], fs) + fs
+	return cf + fs
 }
 
-func getFolders(ignore string) []string {
+func getFolders(basedir, ignore string) []string {
 	ign := strings.Split(ignore, ",")
 	var folders []string
-	err := filepath.Walk("."+fs, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(basedir+".", func(path string, info os.FileInfo, err error) error {
 		// Return only folders
 		if info.IsDir() {
+			//name := strings.Split(info.Name(), "src"+fs)[1]
 			// Skip if folder name is vendor, is hidden (starting with dot, but ignore dot only)
 			if (info.Name() == "vendor" || skipHidden(info.Name())) && info.Name() != "." {
 				return filepath.SkipDir
@@ -99,7 +114,8 @@ func getFolders(ignore string) []string {
 				}
 			}
 
-			folders = append(folders, path)
+			folders = append(folders, strings.Split(path, "src"+fs)[1])
+
 		}
 		return nil
 	})
