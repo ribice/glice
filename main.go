@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"flag"
+	"go/build"
 	"log"
 	"os"
 	"os/exec"
@@ -42,6 +43,7 @@ func main() {
 		fileWrite  = flag.Bool("f", false, "Writes all licenses to files")
 		ignoreDirs = flag.String("i", "", "Comma separated list of folders that should be ignored")
 		ghkey      = flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
+		path       = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/")`)
 		depth      = "Imports"
 		apiKeys    = map[string]string{}
 	)
@@ -50,7 +52,8 @@ func main() {
 
 	// Gets current folder in $GOPATH
 
-	basedir := getCurrentFolder()
+	fullPath := getCurrentFolder(*path)
+	basedir := strings.Split(fullPath, "src"+fs)[1]
 	bdl := len(basedir) - 1
 
 	if *recursive {
@@ -65,7 +68,7 @@ func main() {
 		apiKeys["github.com"] = *ghkey
 	}
 
-	for _, v := range getFolders(*ignoreDirs) {
+	for _, v := range getFolders(fullPath, *ignoreDirs) {
 		// implement concurrency here
 		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose)
 	}
@@ -73,22 +76,30 @@ func main() {
 
 }
 
-func getCurrentFolder() string {
+func getCurrentFolder(path string) string {
+
+	if path != "" {
+		if !strings.HasSuffix(path, fs) {
+			path += fs
+		}
+		return build.Default.GOPATH + fs + "src" + fs + path
+	}
 
 	cf, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
-	return strings.TrimPrefix(strings.Split(cf, "src")[1], fs) + fs
+	return cf + fs
 }
 
-func getFolders(ignore string) []string {
+func getFolders(fullPath, ignore string) []string {
 	ign := strings.Split(ignore, ",")
 	var folders []string
-	err := filepath.Walk("."+fs, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(fullPath+".", func(path string, info os.FileInfo, err error) error {
 		// Return only folders
 		if info.IsDir() {
+			//name := strings.Split(info.Name(), "src"+fs)[1]
 			// Skip if folder name is vendor, is hidden (starting with dot, but ignore dot only)
 			if (info.Name() == "vendor" || skipHidden(info.Name())) && info.Name() != "." {
 				return filepath.SkipDir
@@ -99,7 +110,8 @@ func getFolders(ignore string) []string {
 				}
 			}
 
-			folders = append(folders, path)
+			folders = append(folders, strings.Split(path, fullPath)[1])
+
 		}
 		return nil
 	})
