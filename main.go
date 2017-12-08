@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -75,13 +74,13 @@ func main() {
 }
 
 func getCurrentFolder() string {
-	cf, err := exec.Command("go", "list").Output()
+
+	cf, err := os.Getwd()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		panic(err)
 	}
 
-	return strings.Replace(string(cf), nl, fs, -1)
+	return strings.TrimPrefix(strings.Split(cf, "src")[1], fs) + fs
 }
 
 func getFolders(ignore string) []string {

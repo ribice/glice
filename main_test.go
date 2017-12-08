@@ -11,7 +11,8 @@ import (
 
 func TestGetCurrentFolder(t *testing.T) {
 	s := getCurrentFolder()
-	if s != "github.com/ribice/glice/" {
+	fmt.Println(s)
+	if s != "github.com"+fs+"ribice"+fs+"glice"+fs {
 		t.Errorf("Current folder is not correct")
 	}
 }
