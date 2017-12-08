@@ -33,9 +33,17 @@ To run glice, navigate to a folder in gopath and execute:
     glice
 ```
 
+Alternatively, you can provide path which you want to be scanned with -p flag:
+
+```bash
+    glice -p"github.com/ribice/glice/"
+```
+
 By default glice:
 
 - Prints only to stdout
+
+- Gets dependencies and licenses from current directory
 
 - Shows only third-party dependencies, grouped under project name (e.g. github.com/author/repo/http and github.com/author/repo/http/middleware are counted as 2 github.com/author/repo, and that's being displayed)
 
@@ -53,6 +61,7 @@ All flags are optional. Glice supports the following flags:
 - r [boolean - recursive] // returns dependencies of dependencies (single level only)
 - f [boolean - fileWrite] // writes all license files inside /licenses folder
 - i [string - ignoreFolders] // list of comma-separated folders that should be ignored
+- p [string - path] // path to be scanned in form of github.com/author/repo/
 - gh [string - githubAPIKey] // used to increase GitHub API's rate limit from 60req/h to 5000req/h
 ```
 

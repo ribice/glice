@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"flag"
-	"fmt"
 	"go/build"
 	"log"
 	"os"
@@ -69,9 +68,6 @@ func main() {
 		apiKeys["github.com"] = *ghkey
 	}
 
-	// fmt.Println(fullPath)
-	fmt.Println(getFolders(fullPath, *ignoreDirs))
-
 	for _, v := range getFolders(fullPath, *ignoreDirs) {
 		// implement concurrency here
 		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose)
@@ -86,7 +82,7 @@ func getCurrentFolder(path string) string {
 		if !strings.HasSuffix(path, fs) {
 			path += fs
 		}
-		return filepath.Join(build.Default.GOPATH, "src", path)
+		return build.Default.GOPATH + fs + "src" + fs + path
 	}
 
 	cf, err := os.Getwd()
@@ -97,10 +93,10 @@ func getCurrentFolder(path string) string {
 	return cf + fs
 }
 
-func getFolders(basedir, ignore string) []string {
+func getFolders(fullPath, ignore string) []string {
 	ign := strings.Split(ignore, ",")
 	var folders []string
-	err := filepath.Walk(basedir+".", func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(fullPath+".", func(path string, info os.FileInfo, err error) error {
 		// Return only folders
 		if info.IsDir() {
 			//name := strings.Split(info.Name(), "src"+fs)[1]
@@ -114,7 +110,7 @@ func getFolders(basedir, ignore string) []string {
 				}
 			}
 
-			folders = append(folders, strings.Split(path, "src"+fs)[1])
+			folders = append(folders, strings.Split(path, fullPath)[1])
 
 		}
 		return nil

@@ -2,26 +2,56 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/ribice/glice/api"
-
 	"github.com/fatih/color"
+	"github.com/ribice/glice/api"
 )
 
 func TestGetCurrentFolder(t *testing.T) {
-	s := getCurrentFolder()
-	fmt.Println(s)
+	s := strings.Split(getCurrentFolder(""), "src"+fs)[1]
 	if s != "github.com"+fs+"ribice"+fs+"glice"+fs {
 		t.Errorf("Current folder is not correct")
 	}
 }
+func TestGetCurrentFolderWithPath(t *testing.T) {
+	path := filepath.Join("github.com", "ribice", "glice", "testdata", "validate") + fs
+	s := strings.Split(getCurrentFolder(path), "src"+fs)[1]
+	if s != path {
+		t.Errorf("Current folder is not correct")
+	}
+}
+
+func TestGetCurrentFolderWithPathNoFs(t *testing.T) {
+	path := filepath.Join("github.com", "ribice", "glice", "testdata", "validate")
+	s := strings.Split(getCurrentFolder(path), "src"+fs)[1]
+	if s != path+fs {
+		t.Errorf("Current folder is not correct")
+	}
+}
 func TestGetFolders(t *testing.T) {
-	s := getFolders("testdata")
-	if s[0] != "."+fs || s[1] != "api" {
+	cf, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	s := getFolders(cf+fs, "testdata")
+	if s[0] != "." || s[1] != "api" {
 		t.Errorf("There were missing or wrongly named folders")
 	}
+}
 
+func TestGetFoldersWithPath(t *testing.T) {
+	cf, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	s := getFolders(cf+fs+"testdata"+fs+"validate"+fs, "")
+	if s[0] != "." || s[1] != "validators" {
+		t.Errorf("There were missing or wrongly named folders")
+	}
 }
 
 func TestGetLicenseWriteStd(t *testing.T) {
@@ -52,5 +82,4 @@ func TestGetLicenseWriteStd(t *testing.T) {
 	if ds.deps[0].license.Shortname != color.New(color.FgGreen).Sprintf("MIT") {
 		t.Errorf("API did not return correct license.")
 	}
-
 }
