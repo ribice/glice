@@ -69,28 +69,31 @@ func TestGetLicenseWriteStd(t *testing.T) {
 		t.Errorf("Incorrect third dependency")
 	}
 
-	ds.getLicensesWriteStd(nil, false)
+	ds.getLicensesWriteStd("", nil, false)
 
 	if ds.deps[0].license.Shortname != color.New(color.FgGreen).Sprintf("MIT") {
 		t.Errorf("API did not return correct license.")
 	}
 }
 
-// func TestGetLicenseWriteFile(t *testing.T) {
-// 	ds := deps{
-// 		deps: []dep{
-// 			dep{
-// 				name: "strings",
-// 			},
-// 		}}
+func TestGetLicenseWriteFile(t *testing.T) {
+	ds := deps{}
 
-// 	bd := "github.com/ribice/glice/testdata/validate/"
-// 	bdl := len(bd) - 1
-// 	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false)
+	cf, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	path := cf + fs + "testdata" + fs + "demo" + fs
+	bd := strings.Split(path, "src"+fs)[1]
+	bdl := len(bd) - 1
+	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false)
 
-// 	ds.getLicensesWriteStd(apis, false)
+	ds.getLicensesWriteStd(path, nil, true)
 
-// 	if ds.deps[0].license.Shortname != color.New(color.FgGreen).Sprintf("MIT") {
-// 		t.Errorf("API did not return correct license.")
-// 	}
-// }
+	if _, err := os.Stat(path + "licenses" + fs); err != nil {
+		if !os.IsNotExist(err) {
+			t.Errorf("Folder licenses was not deleted")
+		}
+	}
+
+}

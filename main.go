@@ -68,7 +68,7 @@ func main() {
 		// implement concurrency here
 		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose)
 	}
-	ds.getLicensesWriteStd(apiKeys, *fileWrite)
+	ds.getLicensesWriteStd(fullPath, apiKeys, *fileWrite)
 
 }
 
@@ -200,7 +200,7 @@ func getRepoURL(s *string, verbose bool) *api.License {
 	}
 }
 
-func (ds *deps) getLicensesWriteStd(apiKeys map[string]string, fw bool) {
+func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, fw bool) {
 
 	var keepdir bool
 	c := context.Background()
@@ -231,6 +231,6 @@ func (ds *deps) getLicensesWriteStd(apiKeys map[string]string, fw bool) {
 	table.Render()
 
 	if fw && !keepdir {
-		os.Remove("licenses")
+		os.RemoveAll(fullPath + "licenses" + fs)
 	}
 }
