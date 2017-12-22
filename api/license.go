@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -71,30 +70,41 @@ type License struct {
 // NewGitClient instantiates new GitClient
 func NewGitClient(c context.Context, keys map[string]string) *GitClient {
 	var tc *http.Client
+	var ghLogged bool
 	if v, ok := keys["github.com"]; ok {
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: v},
 		)
 		tc = oauth2.NewClient(c, ts)
+		ghLogged = true
 	}
 	ghClient := github.NewClient(tc)
-	return &GitClient{ghClient: ghClient}
-
+	return &GitClient{GH: gHClient{
+		cl: ghClient, logged: ghLogged,
+	}}
 }
 
 // GitClient holds clients for interfering with Git provider APIs
 type GitClient struct {
-	ghClient *github.Client
+	GH gHClient
+}
+
+type gHClient struct {
+	cl     *github.Client
+	logged bool
 }
 
 // GetLicenses gets licenses for 3rd party dependencies
-func (l *License) GetLicenses(c context.Context, gc *GitClient, fileWrite bool) error {
+func (l *License) GetLicenses(c context.Context, gc *GitClient, repoStar, fileWrite bool) error {
 
 	switch l.Host {
 	case "github.com":
-		rl, _, err := gc.ghClient.Repositories.License(c, l.Author, l.Project)
+		if gc.GH.logged && repoStar {
+			gc.GH.cl.Activity.Star(c, l.Author, l.Project)
+		}
+		rl, _, err := gc.GH.cl.Repositories.License(c, l.Author, l.Project)
 		if err != nil {
-			return fmt.Errorf("bad credentials")
+			return err
 		}
 		name, clr := licenseCol[*rl.License.Key].name, licenseCol[*rl.License.Key].color
 		if name == "" {
@@ -102,6 +112,7 @@ func (l *License) GetLicenses(c context.Context, gc *GitClient, fileWrite bool) 
 			clr = color.FgYellow
 		}
 		l.Shortname = color.New(clr).Sprintf(name)
+
 		if fileWrite {
 			l.writeToFile(rl.GetContent(), "licenses")
 		}
@@ -130,4 +141,11 @@ func (l *License) writeToFile(s, folderName string) error {
 		panic(err)
 	}
 	return nil
+}
+
+// StarGlice stars Glice if user is logged in and thanks flag has been passed
+func StarGlice(c context.Context, g *GitClient) {
+	if g.GH.logged {
+		g.GH.cl.Activity.Star(c, "ribice", "glice")
+	}
 }

@@ -23,7 +23,7 @@ func TestGitHubAPINoKey(t *testing.T) {
 
 	gc := NewGitClient(c, nil)
 
-	err := l.GetLicenses(c, gc, false)
+	err := l.GetLicenses(c, gc, false, false)
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +45,7 @@ func TestNonexistingLicense(t *testing.T) {
 
 	gc := NewGitClient(c, nil)
 
-	err := l.GetLicenses(c, gc, false)
+	err := l.GetLicenses(c, gc, false, false)
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +71,30 @@ func TestGitHubAPIWithKey(t *testing.T) {
 
 	gc := NewGitClient(c, v)
 
-	err := l.GetLicenses(c, gc, false)
+	err := l.GetLicenses(c, gc, false, false)
+	if err == nil {
+		t.Errorf("expected bad credentials error")
+	}
+
+}
+
+func TestGitHubAPIWithKeyAndThanks(t *testing.T) {
+
+	c := context.Background()
+	l := &License{
+		URL:     "github.com/ribice/kiss",
+		Host:    "github.com",
+		Author:  "ribice",
+		Project: "kiss",
+	}
+
+	v := map[string]string{
+		"github.com": "apikey",
+	}
+
+	gc := NewGitClient(c, v)
+
+	err := l.GetLicenses(c, gc, true, false)
 	if err == nil {
 		t.Errorf("expected bad credentials error")
 	}
@@ -113,4 +136,14 @@ func TestInvalidFile(t *testing.T) {
 
 	assert.Panics(t, func() { l.writeToFile(content, dir) }, "Panic - invalid base64 character")
 
+}
+
+func TestStarGlice(t *testing.T) {
+	c := context.Background()
+	v := map[string]string{
+		"github.com": "apikey",
+	}
+
+	gc := NewGitClient(c, v)
+	StarGlice(c, gc)
 }

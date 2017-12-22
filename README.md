@@ -63,6 +63,7 @@ All flags are optional. Glice supports the following flags:
 - i [string - ignoreFolders] // list of comma-separated folders that should be ignored
 - p [string - path] // path to be scanned in form of github.com/author/repo/
 - gh [string - githubAPIKey] // used to increase GitHub API's rate limit from 60req/h to 5000req/h
+- t [boolean - thanks] // if GitHub API key is provided, setting this flag will star all GitHub repos from dependency. __In order to do this, API key must have access to public_repo__
 ```
 
 Don't forget `-help` flag for detailed usage information.

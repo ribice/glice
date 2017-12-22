@@ -44,6 +44,7 @@ func main() {
 		ignoreDirs = flag.String("i", "", "Comma separated list of folders that should be ignored")
 		ghkey      = flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
 		path       = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/")`)
+		thx        = flag.Bool("t", false, "Stars dependent repos")
 		depth      = "Imports"
 		apiKeys    = map[string]string{}
 	)
@@ -68,7 +69,7 @@ func main() {
 		// implement concurrency here
 		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose)
 	}
-	ds.getLicensesWriteStd(fullPath, apiKeys, *fileWrite)
+	ds.getLicensesWriteStd(fullPath, apiKeys, *thx, *fileWrite)
 
 }
 
@@ -200,7 +201,7 @@ func getRepoURL(s *string, verbose bool) *api.License {
 	}
 }
 
-func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, fw bool) {
+func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, thx, fw bool) {
 
 	var keepdir bool
 	c := context.Background()
@@ -219,7 +220,7 @@ func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, 
 		str := []string{v.name, strconv.Itoa(v.count + 1)}
 		switch {
 		case v.license != nil && !v.license.Exists:
-			err := v.license.GetLicenses(c, gc, fw)
+			err := v.license.GetLicenses(c, gc, thx, fw)
 			if err != nil {
 				continue
 			}
@@ -234,5 +235,9 @@ func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, 
 
 	if fw && !keepdir {
 		os.RemoveAll(fullPath + "licenses" + fs)
+	}
+
+	if thx {
+		api.StarGlice(c, gc)
 	}
 }

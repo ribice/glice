@@ -69,7 +69,7 @@ func TestGetLicenseWriteStd(t *testing.T) {
 		t.Errorf("Incorrect third dependency")
 	}
 
-	ds.getLicensesWriteStd("", nil, false)
+	ds.getLicensesWriteStd("", nil, false, false)
 
 	if ds.deps[0].license.Shortname != color.New(color.FgGreen).Sprintf("MIT") {
 		t.Errorf("API did not return correct license.")
@@ -88,7 +88,7 @@ func TestGetLicenseWriteFile(t *testing.T) {
 	bdl := len(bd) - 1
 	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false)
 
-	ds.getLicensesWriteStd(path, nil, true)
+	ds.getLicensesWriteStd(path, nil, true, true)
 
 	if _, err := os.Stat(path + "licenses" + fs); err != nil {
 		if !os.IsNotExist(err) {
