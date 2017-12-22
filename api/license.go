@@ -68,22 +68,31 @@ type License struct {
 	Project     string
 }
 
-// GetLicenses gets licenses for 3rd party dependencies
-func (l *License) GetLicenses(c context.Context, keys map[string]string, fileWrite bool) error {
-
+// NewGitClient instantiates new GitClient
+func NewGitClient(c context.Context, keys map[string]string) *GitClient {
 	var tc *http.Client
+	if v, ok := keys["github.com"]; ok {
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: v},
+		)
+		tc = oauth2.NewClient(c, ts)
+	}
+	ghClient := github.NewClient(tc)
+	return &GitClient{ghClient: ghClient}
+
+}
+
+// GitClient holds clients for interfering with Git provider APIs
+type GitClient struct {
+	ghClient *github.Client
+}
+
+// GetLicenses gets licenses for 3rd party dependencies
+func (l *License) GetLicenses(c context.Context, gc *GitClient, fileWrite bool) error {
 
 	switch l.Host {
 	case "github.com":
-		if v, ok := keys["github.com"]; ok {
-			ts := oauth2.StaticTokenSource(
-				&oauth2.Token{AccessToken: v},
-			)
-			tc = oauth2.NewClient(c, ts)
-		}
-		client := github.NewClient(tc)
-
-		rl, _, err := client.Repositories.License(c, l.Author, l.Project)
+		rl, _, err := gc.ghClient.Repositories.License(c, l.Author, l.Project)
 		if err != nil {
 			return fmt.Errorf("bad credentials")
 		}

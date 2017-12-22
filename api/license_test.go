@@ -21,7 +21,9 @@ func TestGitHubAPINoKey(t *testing.T) {
 		Project: "kiss",
 	}
 
-	err := l.GetLicenses(c, nil, false)
+	gc := NewGitClient(c, nil)
+
+	err := l.GetLicenses(c, gc, false)
 	if err != nil {
 		panic(err)
 	}
@@ -41,7 +43,9 @@ func TestNonexistingLicense(t *testing.T) {
 		Project: "wtfjs",
 	}
 
-	err := l.GetLicenses(c, nil, false)
+	gc := NewGitClient(c, nil)
+
+	err := l.GetLicenses(c, gc, false)
 	if err != nil {
 		panic(err)
 	}
@@ -65,7 +69,9 @@ func TestGitHubAPIWithKey(t *testing.T) {
 		"github.com": "apikey",
 	}
 
-	err := l.GetLicenses(c, v, false)
+	gc := NewGitClient(c, v)
+
+	err := l.GetLicenses(c, gc, false)
 	if err == nil {
 		t.Errorf("expected bad credentials error")
 	}

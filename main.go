@@ -205,6 +205,8 @@ func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, 
 	var keepdir bool
 	c := context.Background()
 
+	gc := api.NewGitClient(c, apiKeys)
+
 	if fw {
 		os.Mkdir("licenses", 0777)
 	}
@@ -217,7 +219,7 @@ func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, 
 		str := []string{v.name, strconv.Itoa(v.count + 1)}
 		switch {
 		case v.license != nil && !v.license.Exists:
-			err := v.license.GetLicenses(c, apiKeys, fw)
+			err := v.license.GetLicenses(c, gc, fw)
 			if err != nil {
 				continue
 			}
