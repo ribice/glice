@@ -8,7 +8,7 @@ Golang license and dependency checker. Prints list of all dependencies (both fro
 
 ## Introduction
 
-glice analyzes the source code of your project and gets the list of all dependencies (by default only third-party ones, standard library can be enabled with flag) and prints in a tabular format their name, count (in different packages), URL (for third-party ones) and license short-name (MIT, GPL..).
+glice analyzes the source code of your project and gets the list of all dependencies (by default only third-party ones, standard library can be enabled with flag) and prints in a tabular format their name, URL (for third-party ones, currently only GitHub is supported) and license short-name (MIT, GPL..).
 
 ## Installation
 
@@ -64,13 +64,14 @@ All flags are optional. Glice supports the following flags:
 - p [string - path] // path to be scanned in form of github.com/author/repo/
 - gh [string - githubAPIKey] // used to increase GitHub API's rate limit from 60req/h to 5000req/h
 - t [boolean - thanks] // if GitHub API key is provided, setting this flag will star all GitHub repos from dependency. __In order to do this, API key must have access to public_repo__
+- c [boolean - count] // print usage count of dependencies in packages (max one count per package)
 ```
 
 Don't forget `-help` flag for detailed usage information.
 
 ## Sample output
 
-Executing glice on github.com/qiangxue/golang-restful-starter-kit prints (with additional colors for links and licenses):
+Executing glice -c on github.com/qiangxue/golang-restful-starter-kit prints (with additional colors for links and licenses):
 
 ```
 +------------------------------------+-------+--------------------------------------------+---------+

@@ -45,6 +45,7 @@ func main() {
 		ghkey      = flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
 		path       = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/")`)
 		thx        = flag.Bool("t", false, "Stars dependent repos")
+		count      = flag.Bool("c", false, "Include usage count in exported result")
 		depth      = "Imports"
 		apiKeys    = map[string]string{}
 	)
@@ -69,7 +70,7 @@ func main() {
 		// implement concurrency here
 		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose)
 	}
-	ds.getLicensesWriteStd(fullPath, apiKeys, *thx, *fileWrite)
+	ds.getLicensesWriteStd(fullPath, apiKeys, *thx, *fileWrite, *count)
 
 }
 
@@ -201,7 +202,7 @@ func getRepoURL(s *string, verbose bool) *api.License {
 	}
 }
 
-func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, thx, fw bool) {
+func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, thx, fw, count bool) {
 
 	var keepdir bool
 	c := context.Background()
@@ -214,10 +215,18 @@ func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, 
 
 	table := tablewriter.NewWriter(os.Stdout)
 	if len(ds.deps) > 0 {
-		table.SetHeader([]string{"Dependency", "Count", "RepoURL", "License"})
+		// Dynamically add Count column instead of using if/else
+		if count {
+			table.SetHeader([]string{"Dependency", "Count", "RepoURL", "License"})
+		} else {
+			table.SetHeader([]string{"Dependency", "RepoURL", "License"})
+		}
 	}
 	for _, v := range ds.deps {
-		str := []string{v.name, strconv.Itoa(v.count + 1)}
+		str := []string{v.name}
+		if count {
+			str = append(str, strconv.Itoa(v.count+1))
+		}
 		switch {
 		case v.license != nil && !v.license.Exists:
 			err := v.license.GetLicenses(c, gc, thx, fw)
