@@ -2,10 +2,7 @@ package api
 
 import (
 	"context"
-	"encoding/base64"
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"github.com/fatih/color"
 	"github.com/google/go-github/github"
@@ -15,10 +12,6 @@ import (
 type licenseFormat struct {
 	name  string
 	color color.Attribute
-}
-
-var apis = map[string]string{
-	"github.com": "https://api.github.com/repos/",
 }
 
 var licenseCol = map[string]licenseFormat{
@@ -65,6 +58,7 @@ type License struct {
 	Host        string
 	Author      string
 	Project     string
+	Text        string
 }
 
 // NewGitClient instantiates new GitClient
@@ -95,57 +89,29 @@ type gHClient struct {
 }
 
 // GetLicenses gets licenses for 3rd party dependencies
-func (l *License) GetLicenses(c context.Context, gc *GitClient, repoStar, fileWrite bool) error {
-
+func (l *License) GetLicenses(c context.Context, gc *GitClient) {
 	switch l.Host {
 	case "github.com":
-		if gc.GH.logged && repoStar {
-			gc.GH.cl.Activity.Star(c, l.Author, l.Project)
-		}
-		rl, _, err := gc.GH.cl.Repositories.License(c, l.Author, l.Project)
-		if err != nil {
-			return err
-		}
+		rl, _, _ := gc.GH.cl.Repositories.License(c, l.Author, l.Project)
 		name, clr := licenseCol[*rl.License.Key].name, licenseCol[*rl.License.Key].color
 		if name == "" {
 			name = *rl.License.Key
 			clr = color.FgYellow
 		}
 		l.Shortname = color.New(clr).Sprintf(name)
-
-		if fileWrite {
-			l.writeToFile(rl.GetContent(), "licenses")
-		}
-
+		l.Text = rl.GetContent()
 	}
-	return nil
-
 }
 
-func (l *License) writeToFile(s, folderName string) error {
-	dec, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		panic(err)
+// Star stars the repository if the user provided API key for GitHub
+func (l *License) Star(c context.Context, gc *GitClient) {
+	switch l.Host {
+	case "github.com":
+		gc.GH.cl.Activity.Star(c, l.Author, l.Project)
 	}
-
-	f, err := os.Create(folderName + string(filepath.Separator) + l.Author + "-" + l.Project + "-license" + ".MD")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	if _, err := f.Write(dec); err != nil {
-		panic(err)
-	}
-	if err := f.Sync(); err != nil {
-		panic(err)
-	}
-	return nil
 }
 
 // StarGlice stars Glice if user is logged in and thanks flag has been passed
 func StarGlice(c context.Context, g *GitClient) {
-	if g.GH.logged {
-		g.GH.cl.Activity.Star(c, "ribice", "glice")
-	}
+	g.GH.cl.Activity.Star(c, "ribice", "glice")
 }

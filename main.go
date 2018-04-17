@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/base64"
 	"flag"
 	"go/build"
 	"log"
@@ -44,7 +45,7 @@ func main() {
 		ignoreDirs = flag.String("i", "", "Comma separated list of folders that should be ignored")
 		ghkey      = flag.String("gh", "", "GitHub API key used for increasing the GitHub's API rate limit from 60req/h to 5000req/h")
 		path       = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/")`)
-		thx        = flag.Bool("t", false, "Stars dependent repos")
+		thx        = flag.Bool("t", false, "Stars dependent repos.")
 		count      = flag.Bool("c", false, "Include usage count in exported result")
 		indirect   = flag.Bool("in", false, "Resolve indirect repos (find the repo location through an html meta header)")
 		depth      = "Imports"
@@ -71,24 +72,37 @@ func main() {
 		// implement concurrency here
 		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose, *indirect)
 	}
-	ds.getLicensesWriteStd(fullPath, apiKeys, *thx, *fileWrite, *count)
-
+	c := context.Background()
+	gh := api.NewGitClient(c, apiKeys)
+	ds.getLicenses(c, gh)
+	if *thx {
+		ds.starRepos(c, gh)
+	}
+	tw := tablewriter.NewWriter(os.Stdout)
+	if !*count {
+		ds.writeStd(tw)
+	} else {
+		ds.writeStdCount(tw)
+	}
+	tw.Render()
+	if *fileWrite {
+		if err := ds.writeLicensesToFile(fullPath); err != nil {
+			log.Fatalf("Error writing to file: %v", err)
+		}
+	}
 }
 
 func getCurrentFolder(path string) string {
-
 	if path != "" {
 		if !strings.HasSuffix(path, fs) {
 			path += fs
 		}
 		return build.Default.GOPATH + fs + "src" + fs + path
 	}
-
 	cf, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
-
 	return cf + fs
 }
 
@@ -160,22 +174,24 @@ func (ds *deps) getDeps(basedir, dirname, depth string, bdl int, incStdLib, verb
 	}
 }
 
-func (ds *deps) exists(s string, verbose bool, indirect bool) *dep {
-
-	// handle dep's vendor folder
+func (ds *deps) exists(s string, verbose, indirect bool) *dep {
 	if strings.Contains(s, "vendor"+fs) {
 		s = strings.Split(s, "vendor"+fs)[1]
 	}
+
 	l := getRepoURL(&s, verbose, indirect)
+
 	for i, v := range ds.deps {
 		if v.name == s {
 			ds.deps[i].count++
 			return nil
 		}
+
 		if v.license != nil && l != nil && v.license.URL == l.URL {
 			l.Exists = true
 		}
 	}
+
 	return &dep{name: s, license: l}
 }
 
@@ -212,51 +228,70 @@ func getRepoURL(s *string, verbose bool, indirect bool) *api.License {
 	}
 }
 
-func (ds *deps) getLicensesWriteStd(fullPath string, apiKeys map[string]string, thx, fw, count bool) {
-
-	var keepdir bool
-	c := context.Background()
-
-	gc := api.NewGitClient(c, apiKeys)
-
-	if fw {
-		os.Mkdir("licenses", 0777)
-	}
-
-	table := tablewriter.NewWriter(os.Stdout)
-	if len(ds.deps) > 0 {
-		// Dynamically add Count column instead of using if/else
-		if count {
-			table.SetHeader([]string{"Dependency", "Count", "RepoURL", "License"})
-		} else {
-			table.SetHeader([]string{"Dependency", "RepoURL", "License"})
-		}
-	}
+func (ds *deps) getLicenses(c context.Context, gh *api.GitClient) {
 	for _, v := range ds.deps {
-		str := []string{v.name}
-		if count {
-			str = append(str, strconv.Itoa(v.count+1))
+		if v.license != nil {
+			v.license.GetLicenses(c, gh)
 		}
-		switch {
-		case v.license != nil && !v.license.Exists:
-			err := v.license.GetLicenses(c, gc, thx, fw)
-			if err != nil {
-				continue
-			}
-			keepdir = true
+	}
+}
+
+func (ds *deps) starRepos(c context.Context, gh *api.GitClient) {
+	for _, v := range ds.deps {
+		if v.license != nil {
+			v.license.Star(c, gh)
+		}
+	}
+	api.StarGlice(c, gh)
+}
+
+func (ds *deps) writeStd(tw *tablewriter.Table) {
+	tw.SetHeader([]string{"Dependency", "RepoURL", "License"})
+	for _, v := range ds.deps {
+		str := []string{v.name, strconv.Itoa(v.count + 1)}
+		if v.license != nil {
 			str = append(str, color.BlueString(v.license.URL), v.license.Shortname)
-		default:
+		} else {
 			str = append(str, "", "")
 		}
-		table.Append(str)
+		tw.Append(str)
 	}
-	table.Render()
+}
 
-	if fw && !keepdir {
-		os.RemoveAll(fullPath + "licenses" + fs)
+func (ds *deps) writeStdCount(tw *tablewriter.Table) {
+	tw.SetHeader([]string{"Dependency", "Count", "RepoURL", "License"})
+	for _, v := range ds.deps {
+		str := []string{v.name}
+		if v.license != nil {
+			str = append(str, color.BlueString(v.license.URL), v.license.Shortname)
+		} else {
+			str = append(str, "", "")
+		}
+		tw.Append(str)
 	}
+}
 
-	if thx {
-		api.StarGlice(c, gc)
+func (ds *deps) writeLicensesToFile(path string) error {
+	os.Mkdir("licenses", 0777)
+	for _, v := range ds.deps {
+		if v.license != nil && v.license.Text != "" {
+			dec, err := base64.StdEncoding.DecodeString(v.license.Text)
+			if err != nil {
+				return err
+			}
+			f, err := os.Create(path + fs + v.license.Author + "-" + v.license.Project + "-license" + ".MD")
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			if _, err := f.Write(dec); err != nil {
+				return err
+			}
+			if err := f.Sync(); err != nil {
+				return err
+			}
+		}
 	}
+	return nil
 }

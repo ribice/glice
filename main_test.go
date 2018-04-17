@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,7 +70,12 @@ func TestGetLicenseWriteStd(t *testing.T) {
 		t.Errorf("Incorrect third dependency")
 	}
 
-	ds.getLicensesWriteStd("", nil, false, false, false)
+	c := context.Background()
+	gh := api.NewGitClient(c, nil)
+
+	ds.getLicenses(c, gh)
+
+	// ds.getLicensesWriteStd("", nil, false, false, false)
 
 	if ds.deps[0].license.Shortname != color.New(color.FgGreen).Sprintf("MIT") {
 		t.Errorf("API did not return correct license.")
@@ -88,7 +94,7 @@ func TestGetLicenseWriteFile(t *testing.T) {
 	bdl := len(bd) - 1
 	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false, false)
 
-	ds.getLicensesWriteStd(path, nil, true, true, true)
+	// ds.getLicensesWriteStd(path, nil, true, true, true)
 
 	if _, err := os.Stat(path + "licenses" + fs); err != nil {
 		if !os.IsNotExist(err) {
