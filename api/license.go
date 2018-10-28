@@ -59,7 +59,7 @@ var licenseCol = map[string]licenseFormat{
 // License holds information about the license
 type License struct {
 	Shortname   string
-	fullLicense string
+	FullLicense string
 	URL         string
 	Exists      bool
 	Host        string
