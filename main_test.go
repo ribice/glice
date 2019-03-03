@@ -61,7 +61,7 @@ func TestGetLicenseWriteStd(t *testing.T) {
 
 	bd := "github.com/ribice/glice/testdata/validate/"
 	bdl := len(bd) - 1
-	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false)
+	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false, false)
 	if len(ds.deps) != 9 {
 		t.Errorf("Incorrect number of dependencies")
 	}
@@ -86,7 +86,7 @@ func TestGetLicenseWriteFile(t *testing.T) {
 	path := cf + fs + "testdata" + fs + "demo" + fs
 	bd := strings.Split(path, "src"+fs)[1]
 	bdl := len(bd) - 1
-	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false)
+	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false, false)
 
 	ds.getLicensesWriteStd(path, nil, true, true, true)
 
