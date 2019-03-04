@@ -200,9 +200,11 @@ func getRepoURL(s *string, verbose bool, indirect bool) *api.License {
 		return nil
 	default:
 		if indirect {
-			repo, err := getIndirectRepo(*s)
-			if err == nil {
-				*s = repo.Dep
+			repo := getIndirectRepo(*s)
+			if repo.Found {
+				if !verbose {
+					*s = repo.Dep
+				}
 				return &api.License{URL: repo.URL, Host: repo.Repo, Author: repo.Author, Project: repo.Project}
 			}
 		}

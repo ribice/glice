@@ -22,12 +22,26 @@ type IndirectRepo struct {
 	URL     string
 	Author  string
 	Project string
+	Found   bool
 }
 
-func getIndirectRepo(dep string) (indirectRepo IndirectRepo, err error) {
+var cache = map[string]IndirectRepo{}
+
+func getIndirectRepo(dep string) (indirectRepo IndirectRepo) {
+
+	if val, ok := cache[dep]; ok {
+		indirectRepo = val
+		return
+	}
+
+	result := getIndirectRepoInternal(dep)
+	cache[dep] = result
+	return result
+}
+
+func getIndirectRepoInternal(dep string) (indirectRepo IndirectRepo) {
 
 	path := "https://" + dep
-
 	resp, err := http.Get(path)
 
 	if err != nil {
@@ -43,10 +57,14 @@ func getIndirectRepo(dep string) (indirectRepo IndirectRepo, err error) {
 	}
 
 	indirectRepo, err = headerToIndirectRepo(data.Import)
+
 	return
 }
 
 func headerToIndirectRepo(importHeader string) (indirectRepo IndirectRepo, err error) {
+
+	indirectRepo.Found = false
+
 	if importHeader == "" {
 		err = errors.New("header is empty")
 		return
@@ -70,6 +88,7 @@ func headerToIndirectRepo(importHeader string) (indirectRepo IndirectRepo, err e
 		URL:     frags[2],
 		Author:  author,
 		Project: project,
+		Found:   true,
 	}
 
 	return
