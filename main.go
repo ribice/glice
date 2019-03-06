@@ -46,6 +46,7 @@ func main() {
 		path       = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/")`)
 		thx        = flag.Bool("t", false, "Stars dependent repos")
 		count      = flag.Bool("c", false, "Include usage count in exported result")
+		indirect   = flag.Bool("in", false, "Resolve indirect repos (find the repo location through an html meta header)")
 		depth      = "Imports"
 		apiKeys    = map[string]string{}
 	)
@@ -68,7 +69,7 @@ func main() {
 
 	for _, v := range getFolders(fullPath, *ignoreDirs) {
 		// implement concurrency here
-		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose)
+		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose, *indirect)
 	}
 	ds.getLicensesWriteStd(fullPath, apiKeys, *thx, *fileWrite, *count)
 
@@ -129,7 +130,7 @@ func skipHidden(name string) bool {
 	return false
 }
 
-func (ds *deps) getDeps(basedir, dirname, depth string, bdl int, incStdLib, verbose bool) {
+func (ds *deps) getDeps(basedir, dirname, depth string, bdl int, incStdLib, verbose bool, indirect bool) {
 
 	// used for comparing dependency with current project minus the file separator
 	if dirname == "."+fs {
@@ -150,7 +151,7 @@ func (ds *deps) getDeps(basedir, dirname, depth string, bdl int, incStdLib, verb
 	}
 	s := bufio.NewScanner(stdout)
 	for s.Scan() {
-		if d := ds.exists(s.Text(), verbose); d != nil {
+		if d := ds.exists(s.Text(), verbose, indirect); d != nil {
 			if len(d.name) >= bdl && d.name[0:bdl]+fs == basedir {
 				continue
 			}
@@ -159,13 +160,13 @@ func (ds *deps) getDeps(basedir, dirname, depth string, bdl int, incStdLib, verb
 	}
 }
 
-func (ds *deps) exists(s string, verbose bool) *dep {
+func (ds *deps) exists(s string, verbose bool, indirect bool) *dep {
 
 	// handle dep's vendor folder
 	if strings.Contains(s, "vendor"+fs) {
 		s = strings.Split(s, "vendor"+fs)[1]
 	}
-	l := getRepoURL(&s, verbose)
+	l := getRepoURL(&s, verbose, indirect)
 	for i, v := range ds.deps {
 		if v.name == s {
 			ds.deps[i].count++
@@ -178,7 +179,7 @@ func (ds *deps) exists(s string, verbose bool) *dep {
 	return &dep{name: s, license: l}
 }
 
-func getRepoURL(s *string, verbose bool) *api.License {
+func getRepoURL(s *string, verbose bool, indirect bool) *api.License {
 	spl := strings.Split(*s, fs)
 	switch spl[0] {
 	case "github.com", "gitlab.com", "bitbucket.org":
@@ -198,6 +199,15 @@ func getRepoURL(s *string, verbose bool) *api.License {
 		}
 		return nil
 	default:
+		if indirect {
+			repo := getIndirectRepo(*s)
+			if repo.Found {
+				if !verbose {
+					*s = repo.Dep
+				}
+				return &api.License{URL: repo.URL, Host: repo.Repo, Author: repo.Author, Project: repo.Project}
+			}
+		}
 		return nil
 	}
 }
