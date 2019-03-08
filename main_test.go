@@ -51,7 +51,7 @@ func TestGetLicenseWriteStd(t *testing.T) {
 		deps: []dep{
 			dep{
 				name: "github.com/andygrunwald/go-jira",
-				license: &api.License{
+				license: &api.Repository{
 					URL:     "github.com/andygrunwald/go-jira",
 					Author:  "andygrunwald",
 					Project: "go-jira",

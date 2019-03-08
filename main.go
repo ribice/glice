@@ -26,16 +26,22 @@ const (
 type dep struct {
 	name    string
 	count   int
-	license *api.License
+	license *api.Repository
 }
 
 type deps struct {
-	deps []dep
+	deps      []dep
+	baseDir   string
+	depth     string
+	bdl       int
+	incstdlib bool
+	verbose   bool
+	count     bool
+	fw        bool
+	cl        *api.GitClient
 }
 
 func main() {
-
-	var ds deps
 
 	var (
 		verbose    = flag.Bool("v", false, "Include detailed imports (github.com/author/repo/net/http, github.com/author/repo/net/middleware ... instead of only github.com/author/repo")
@@ -47,14 +53,11 @@ func main() {
 		path       = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/")`)
 		thx        = flag.Bool("t", false, "Stars dependent repos.")
 		count      = flag.Bool("c", false, "Include usage count in exported result")
-		indirect   = flag.Bool("in", false, "Resolve indirect repos (find the repo location through an html meta header)")
 		depth      = "Imports"
 		apiKeys    = map[string]string{}
 	)
 
 	flag.Parse()
-
-	// Gets current folder in $GOPATH
 
 	fullPath := getCurrentFolder(*path)
 	basedir := strings.Split(fullPath, "src"+fs)[1]
@@ -64,32 +67,31 @@ func main() {
 		depth = "Deps"
 	}
 
-	if *ghkey != "" {
-		apiKeys["github.com"] = *ghkey
+	ds := deps{
+		baseDir:   basedir,
+		bdl:       bdl,
+		incstdlib: *incStdLib,
+		verbose:   *verbose,
+		count:     *count,
+		fw:        *fileWrite,
+		depth:     depth,
 	}
 
 	for _, v := range getFolders(fullPath, *ignoreDirs) {
-		// implement concurrency here
-		ds.getDeps(basedir, v, depth, bdl, *incStdLib, *verbose, *indirect)
+		ds.getDeps(v)
+	}
+
+	if *ghkey != "" {
+		apiKeys["github.com"] = *ghkey
 	}
 	c := context.Background()
-	gh := api.NewGitClient(c, apiKeys)
-	ds.getLicenses(c, gh)
-	if *thx {
-		ds.starRepos(c, gh)
-	}
+	ds.cl = api.NewGitClient(c, apiKeys, *thx)
+	ds.getLicenses(c)
+
 	tw := tablewriter.NewWriter(os.Stdout)
-	if !*count {
-		ds.writeStd(tw)
-	} else {
-		ds.writeStdCount(tw)
-	}
+	ds.writeStd(tw)
 	tw.Render()
-	if *fileWrite {
-		if err := ds.writeLicensesToFile(fullPath); err != nil {
-			log.Fatalf("Error writing to file: %v", err)
-		}
-	}
+	checkErr(ds.writeLicensesToFile(fullPath))
 }
 
 func getCurrentFolder(path string) string {
@@ -100,19 +102,16 @@ func getCurrentFolder(path string) string {
 		return build.Default.GOPATH + fs + "src" + fs + path
 	}
 	cf, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
+	checkErr(err)
 	return cf + fs
 }
 
 func getFolders(fullPath, ignore string) []string {
 	ign := strings.Split(ignore, ",")
 	var folders []string
-	err := filepath.Walk(fullPath+".", func(path string, info os.FileInfo, err error) error {
+	checkErr(filepath.Walk(fullPath+".", func(path string, info os.FileInfo, err error) error {
 		// Return only folders
 		if info.IsDir() {
-			//name := strings.Split(info.Name(), "src"+fs)[1]
 			// Skip if folder name is vendor, is hidden (starting with dot, but ignore dot only)
 			if (info.Name() == "vendor" || skipHidden(info.Name())) && info.Name() != "." {
 				return filepath.SkipDir
@@ -127,46 +126,37 @@ func getFolders(fullPath, ignore string) []string {
 
 		}
 		return nil
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+	}))
 	return folders
 }
 
 func skipHidden(name string) bool {
-	split := strings.Split(name, fs)
-	for _, v := range split {
-		if strings.HasPrefix(v, ".") == true {
+	for _, v := range strings.Split(name, fs) {
+		if strings.HasPrefix(v, ".") {
 			return true
 		}
 	}
 	return false
 }
 
-func (ds *deps) getDeps(basedir, dirname, depth string, bdl int, incStdLib, verbose bool, indirect bool) {
-
+func (ds *deps) getDeps(dirname string) {
 	// used for comparing dependency with current project minus the file separator
 	if dirname == "."+fs {
 		dirname = ""
 	}
-	args := "go list -f" + ` '{{ .` + depth + ` }}' ` + basedir + dirname + ` | tr "[" " " | tr "]" " " | xargs go list -f '{{if not .Standard}}{{.ImportPath}}{{end}}' `
-	if incStdLib {
-		args = "go list -f '{{  join ." + depth + ` "\n"}}` + "' " + basedir + dirname
+	args := "go list -f" + ` '{{ .` + ds.depth + ` }}' ` + ds.baseDir + dirname + ` | tr "[" " " | tr "]" " " | xargs go list -f '{{if not .Standard}}{{.ImportPath}}{{end}}' `
+	if ds.incstdlib {
+		args = "go list -f '{{  join ." + ds.depth + ` "\n"}}` + "' " + ds.baseDir + dirname
 	}
 
 	cmd := exec.Command("bash", "-c", args)
 	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		panic(err)
-	}
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
+	checkErr(err)
+	checkErr(cmd.Start())
 	s := bufio.NewScanner(stdout)
 	for s.Scan() {
-		if d := ds.exists(s.Text(), verbose, indirect); d != nil {
-			if len(d.name) >= bdl && d.name[0:bdl]+fs == basedir {
+		if d := ds.exists(s.Text(), ds.verbose); d != nil {
+			if len(d.name) >= ds.bdl && d.name[0:ds.bdl]+fs == ds.baseDir {
 				continue
 			}
 			ds.deps = append(ds.deps, *d)
@@ -174,12 +164,12 @@ func (ds *deps) getDeps(basedir, dirname, depth string, bdl int, incStdLib, verb
 	}
 }
 
-func (ds *deps) exists(s string, verbose, indirect bool) *dep {
+func (ds *deps) exists(s string, verbose bool) *dep {
 	if strings.Contains(s, "vendor"+fs) {
 		s = strings.Split(s, "vendor"+fs)[1]
 	}
 
-	l := getRepoURL(&s, verbose, indirect)
+	l := getRepoURL(&s, verbose)
 
 	for i, v := range ds.deps {
 		if v.name == s {
@@ -195,103 +185,91 @@ func (ds *deps) exists(s string, verbose, indirect bool) *dep {
 	return &dep{name: s, license: l}
 }
 
-func getRepoURL(s *string, verbose bool, indirect bool) *api.License {
+func getRepoURL(s *string, verbose bool) *api.Repository {
 	spl := strings.Split(*s, fs)
 	switch spl[0] {
 	case "github.com", "gitlab.com", "bitbucket.org":
-		if !verbose && len(spl) >= 3 {
+		if len(spl) < 3 {
+			return nil
+		}
+		if !verbose {
 			*s = filepath.Join(spl[0], spl[1], spl[2])
 		}
-		if len(spl) >= 3 {
-			return &api.License{URL: "https://" + spl[0] + "/" + spl[1] + "/" + spl[2], Host: spl[0], Author: spl[1], Project: spl[2]}
-		}
-		return nil
+		return &api.Repository{URL: "https://" + spl[0] + "/" + spl[1] + "/" + spl[2], Host: spl[0], Author: spl[1], Project: spl[2]}
+
 	case "gopkg.in":
-		if !verbose && len(spl) >= 3 {
+		if len(spl) < 3 {
+			return nil
+		}
+		if !verbose {
 			*s = filepath.Join(spl[0], spl[1], spl[2])
 		}
-		if len(spl) >= 3 {
-			return &api.License{URL: "https://" + "github.com/" + spl[1] + "/" + strings.Split(spl[2], ".")[0], Host: "github.com", Author: spl[1], Project: strings.Split(spl[2], ".")[0]}
-		}
-		return nil
-	default:
-		if indirect {
-			repo := getIndirectRepo(*s)
-			if repo.Found {
-				if !verbose {
-					*s = repo.Dep
-				}
-				return &api.License{URL: repo.URL, Host: repo.Repo, Author: repo.Author, Project: repo.Project}
-			}
-		}
-		return nil
+		return &api.Repository{URL: "https://github.com/" + spl[1] + "/" + strings.Split(spl[2], ".")[0], Host: "github.com", Author: spl[1], Project: strings.Split(spl[2], ".")[0]}
 	}
+	return getOtherRepo(s, verbose)
 }
 
-func (ds *deps) getLicenses(c context.Context, gh *api.GitClient) {
+func (ds *deps) getLicenses(c context.Context) {
 	for _, v := range ds.deps {
 		if v.license != nil {
-			v.license.GetLicenses(c, gh)
+			v.license.GetLicenses(c, ds.cl)
 		}
 	}
-}
-
-func (ds *deps) starRepos(c context.Context, gh *api.GitClient) {
-	for _, v := range ds.deps {
-		if v.license != nil {
-			v.license.Star(c, gh)
-		}
-	}
-	api.StarGlice(c, gh)
 }
 
 func (ds *deps) writeStd(tw *tablewriter.Table) {
-	tw.SetHeader([]string{"Dependency", "RepoURL", "License"})
-	for _, v := range ds.deps {
-		str := []string{v.name, strconv.Itoa(v.count + 1)}
-		if v.license != nil {
-			str = append(str, color.BlueString(v.license.URL), v.license.Shortname)
-		} else {
-			str = append(str, "", "")
-		}
-		tw.Append(str)
+	keys := []string{"Dependency", "RepoURL", "License"}
+	if ds.count {
+		keys = append(keys, "Count")
 	}
-}
-
-func (ds *deps) writeStdCount(tw *tablewriter.Table) {
-	tw.SetHeader([]string{"Dependency", "Count", "RepoURL", "License"})
+	tw.SetHeader(keys)
 	for _, v := range ds.deps {
-		str := []string{v.name}
+		vals := []string{v.name}
 		if v.license != nil {
-			str = append(str, color.BlueString(v.license.URL), v.license.Shortname)
+			vals = append(vals, color.BlueString(v.license.URL), v.license.Shortname)
 		} else {
-			str = append(str, "", "")
+			vals = append(vals, "", "")
 		}
-		tw.Append(str)
+		if ds.count {
+			vals = append(vals, strconv.Itoa(v.count+1))
+		}
+		tw.Append(vals)
 	}
 }
 
 func (ds *deps) writeLicensesToFile(path string) error {
+	if !ds.fw {
+		return nil
+	}
 	os.Mkdir("licenses", 0777)
 	for _, v := range ds.deps {
-		if v.license != nil && v.license.Text != "" {
-			dec, err := base64.StdEncoding.DecodeString(v.license.Text)
-			if err != nil {
-				return err
-			}
-			f, err := os.Create(path + fs + v.license.Author + "-" + v.license.Project + "-license" + ".MD")
-			if err != nil {
-				return err
-			}
-			defer f.Close()
+		if v.license == nil || v.license.Text == "" {
+			continue
+		}
 
-			if _, err := f.Write(dec); err != nil {
-				return err
-			}
-			if err := f.Sync(); err != nil {
-				return err
-			}
+		dec, err := base64.StdEncoding.DecodeString(v.license.Text)
+		if err != nil {
+			return err
+		}
+		f, err := os.Create(path + fs + v.license.Author + "-" + v.license.Project + "-license" + ".MD")
+		if err != nil {
+			return err
+		}
+
+		defer f.Close()
+
+		if _, err := f.Write(dec); err != nil {
+			return err
+		}
+		if err := f.Sync(); err != nil {
+			return err
 		}
 	}
 	return nil
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
