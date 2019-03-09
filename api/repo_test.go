@@ -14,7 +14,7 @@ import (
 func TestGitHubAPINoKey(t *testing.T) {
 
 	c := context.Background()
-	l := &License{
+	l := &Repository{
 		URL:     "github.com/ribice/kiss",
 		Host:    "github.com",
 		Author:  "ribice",
@@ -36,7 +36,7 @@ func TestGitHubAPINoKey(t *testing.T) {
 func TestNonexistingLicense(t *testing.T) {
 
 	c := context.Background()
-	l := &License{
+	l := &Repository{
 		URL:     "github.com/denysdovhan/wtfjs",
 		Host:    "github.com",
 		Author:  "denysdovhan",
@@ -58,7 +58,7 @@ func TestNonexistingLicense(t *testing.T) {
 func TestGitHubAPIWithKey(t *testing.T) {
 
 	c := context.Background()
-	l := &License{
+	l := &Repository{
 		URL:     "github.com/ribice/kiss",
 		Host:    "github.com",
 		Author:  "ribice",
@@ -81,7 +81,7 @@ func TestGitHubAPIWithKey(t *testing.T) {
 func TestGitHubAPIWithKeyAndThanks(t *testing.T) {
 
 	c := context.Background()
-	l := &License{
+	l := &Repository{
 		URL:     "github.com/ribice/kiss",
 		Host:    "github.com",
 		Author:  "ribice",
@@ -105,7 +105,7 @@ func TestWriteToFile(t *testing.T) {
 	dir, err := ioutil.TempDir("", "licenses")
 	// check err
 	defer os.RemoveAll(dir)
-	l := &License{
+	l := &Repository{
 		URL:     "github.com/ribice/kiss",
 		Host:    "github.com",
 		Author:  "ribice",
@@ -131,19 +131,9 @@ func TestInvalidFile(t *testing.T) {
 		panic(err)
 	}
 	defer os.RemoveAll(dir)
-	var l *License
+	var r *Repository
 	content := "[]!"
 
-	assert.Panics(t, func() { l.writeToFile(content, dir) }, "Panic - invalid base64 character")
+	assert.Panics(t, func() { r.writeToFile(content, dir) }, "Panic - invalid base64 character")
 
-}
-
-func TestStarGlice(t *testing.T) {
-	c := context.Background()
-	v := map[string]string{
-		"github.com": "apikey",
-	}
-
-	gc := NewGitClient(c, v)
-	StarGlice(c, gc)
 }

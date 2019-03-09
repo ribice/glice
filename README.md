@@ -65,7 +65,6 @@ All flags are optional. Glice supports the following flags:
 - gh [string - githubAPIKey] // used to increase GitHub API's rate limit from 60req/h to 5000req/h
 - t [boolean - thanks] // if GitHub API key is provided, setting this flag will star all GitHub repos from dependency. __In order to do this, API key must have access to public_repo__
 - c [boolean - count] // print usage count of dependencies in packages (max one count per package)
-- in [boolean - indirect] // resolve indirect repos (find the repo location through an html meta header)
 ```
 
 Don't forget `-help` flag for detailed usage information.
