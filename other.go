@@ -20,7 +20,7 @@ type MetaData struct {
 
 var cache = map[string]*api.Repository{}
 
-func getOtherRepo(ptrDep *string, verbose bool) *api.Repository {
+func getOtherRepo(ptrDep *string, verbose bool) (lcs *api.Repository) {
 	dep := *ptrDep
 	if v, ok := cache[dep]; ok {
 		return v
@@ -28,30 +28,30 @@ func getOtherRepo(ptrDep *string, verbose bool) *api.Repository {
 	resp, err := http.Get(fmt.Sprintf("https://%v", dep))
 
 	if err != nil {
-		return nil
+		return
 	}
 
 	defer resp.Body.Close()
 
 	data := new(MetaData)
 	if err = m.Metabolize(resp.Body, data); err != nil {
-		return nil
+		return
 	}
 
 	imports := strings.Split(data.Import, " ")
 	if len(imports) != 3 {
-		return nil
+		return
 	}
 
 	url := imports[2]
 	urlParts := strings.Split(url, "/")
 	if len(urlParts) < 4 {
-		return nil
+		return
 	}
 	if verbose {
 		ptrDep = &urlParts[0]
 	}
-	lcs := &api.Repository{
+	lcs = &api.Repository{
 		URL:    url,
 		Host:   urlParts[2],
 		Author: urlParts[3],
@@ -62,5 +62,5 @@ func getOtherRepo(ptrDep *string, verbose bool) *api.Repository {
 	}
 
 	cache[dep] = lcs
-	return lcs
+	return
 }

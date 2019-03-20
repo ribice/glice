@@ -24,9 +24,9 @@ const (
 )
 
 type dep struct {
-	name    string
-	count   int
-	license *api.Repository
+	name  string
+	count int
+	repo  *api.Repository
 }
 
 type deps struct {
@@ -177,12 +177,12 @@ func (ds *deps) exists(s string, verbose bool) *dep {
 			return nil
 		}
 
-		if v.license != nil && l != nil && v.license.URL == l.URL {
+		if v.repo != nil && v.repo.URL == l.URL {
 			l.Exists = true
 		}
 	}
 
-	return &dep{name: s, license: l}
+	return &dep{name: s, repo: l}
 }
 
 func getRepoURL(s *string, verbose bool) *api.Repository {
@@ -190,7 +190,7 @@ func getRepoURL(s *string, verbose bool) *api.Repository {
 	switch spl[0] {
 	case "github.com", "gitlab.com", "bitbucket.org":
 		if len(spl) < 3 {
-			return nil
+			return &api.Repository{}
 		}
 		if !verbose {
 			*s = filepath.Join(spl[0], spl[1], spl[2])
@@ -199,7 +199,7 @@ func getRepoURL(s *string, verbose bool) *api.Repository {
 
 	case "gopkg.in":
 		if len(spl) < 3 {
-			return nil
+			return &api.Repository{}
 		}
 		if !verbose {
 			*s = filepath.Join(spl[0], spl[1], spl[2])
@@ -211,9 +211,7 @@ func getRepoURL(s *string, verbose bool) *api.Repository {
 
 func (ds *deps) getLicenses(c context.Context) {
 	for _, v := range ds.deps {
-		if v.license != nil {
-			v.license.GetLicenses(c, ds.cl)
-		}
+		v.repo.GetLicenses(c, ds.cl)
 	}
 }
 
@@ -224,12 +222,7 @@ func (ds *deps) writeStd(tw *tablewriter.Table) {
 	}
 	tw.SetHeader(keys)
 	for _, v := range ds.deps {
-		vals := []string{v.name}
-		if v.license != nil {
-			vals = append(vals, color.BlueString(v.license.URL), v.license.Shortname)
-		} else {
-			vals = append(vals, "", "")
-		}
+		vals := []string{v.name, color.BlueString(v.repo.URL), v.repo.Shortname}
 		if ds.count {
 			vals = append(vals, strconv.Itoa(v.count+1))
 		}
@@ -243,15 +236,15 @@ func (ds *deps) writeLicensesToFile(path string) error {
 	}
 	os.Mkdir("licenses", 0777)
 	for _, v := range ds.deps {
-		if v.license == nil || v.license.Text == "" {
+		if v.repo.Text == "" {
 			continue
 		}
 
-		dec, err := base64.StdEncoding.DecodeString(v.license.Text)
+		dec, err := base64.StdEncoding.DecodeString(v.repo.Text)
 		if err != nil {
 			return err
 		}
-		f, err := os.Create(path + fs + v.license.Author + "-" + v.license.Project + "-license" + ".MD")
+		f, err := os.Create(path + fs + v.repo.Author + "-" + v.repo.Project + "-license.MD")
 		if err != nil {
 			return err
 		}

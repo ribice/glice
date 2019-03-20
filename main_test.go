@@ -75,8 +75,6 @@ func TestGetLicenseWriteStd(t *testing.T) {
 
 	ds.getLicenses(c, gh)
 
-	// ds.getLicensesWriteStd("", nil, false, false, false)
-
 	if ds.deps[0].license.Shortname != color.New(color.FgGreen).Sprintf("MIT") {
 		t.Errorf("API did not return correct license.")
 	}
@@ -93,8 +91,6 @@ func TestGetLicenseWriteFile(t *testing.T) {
 	bd := strings.Split(path, "src"+fs)[1]
 	bdl := len(bd) - 1
 	ds.getDeps(bd, "."+fs, "Imports", bdl, true, false, false)
-
-	// ds.getLicensesWriteStd(path, nil, true, true, true)
 
 	if _, err := os.Stat(path + "licenses" + fs); err != nil {
 		if !os.IsNotExist(err) {
