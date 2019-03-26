@@ -177,7 +177,7 @@ func (ds *deps) exists(s string, verbose bool) *dep {
 			return nil
 		}
 
-		if v.repo != nil && v.repo.URL == l.URL {
+		if v.repo != nil && l != nil && v.repo.URL == l.URL {
 			l.Exists = true
 		}
 	}
