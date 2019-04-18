@@ -25,6 +25,9 @@ func getOtherRepo(ptrDep *string, verbose bool) (lcs *api.Repository) {
 	if v, ok := cache[dep]; ok {
 		return v
 	}
+
+	lcs = &api.Repository{}
+
 	resp, err := http.Get(fmt.Sprintf("https://%v", dep))
 
 	if err != nil {
