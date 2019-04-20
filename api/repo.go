@@ -102,6 +102,8 @@ func (r *Repository) GetLicenses(c context.Context, gc *GitClient) {
 			}
 			r.Shortname = color.New(clr).Sprintf(name)
 			r.Text = rl.GetContent()
+		} else {
+			log.Printf("Error getting license for %s: %v", r.Host, err)
 		}
 		if gc.star {
 			gc.GH.cl.Activity.Star(c, r.Author, r.Project)
