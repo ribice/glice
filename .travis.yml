@@ -5,6 +5,7 @@ go:
 before_install:
   - go get github.com/mattn/goveralls
   - go get golang.org/x/tools/cmd/cover
+  - go mod download
 script:
   - $HOME/gopath/bin/goveralls -service=travis-ci
 deploy:
