@@ -236,10 +236,7 @@ func (ds *deps) writeLicensesToFile(path string) error {
 		return nil
 	}
 
-	err := os.Mkdir(licenseDir, 0777)
-	if err != nil {
-		return err
-	}
+	os.Mkdir(licenseDir, 0777)
 
 	for _, v := range ds.deps {
 		if v.repo.Text == "" {
