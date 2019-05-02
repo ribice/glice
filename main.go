@@ -19,8 +19,9 @@ import (
 )
 
 const (
-	nl = "\n"
-	fs = string(filepath.Separator)
+	nl         = "\n"
+	fs         = string(filepath.Separator)
+	licenseDir = "licenses"
 )
 
 type dep struct {
@@ -234,7 +235,12 @@ func (ds *deps) writeLicensesToFile(path string) error {
 	if !ds.fw {
 		return nil
 	}
-	os.Mkdir("licenses", 0777)
+
+	err := os.Mkdir(licenseDir, 0777)
+	if err != nil {
+		return err
+	}
+
 	for _, v := range ds.deps {
 		if v.repo.Text == "" {
 			continue
@@ -244,7 +250,7 @@ func (ds *deps) writeLicensesToFile(path string) error {
 		if err != nil {
 			return err
 		}
-		f, err := os.Create(path + fs + v.repo.Author + "-" + v.repo.Project + "-license.MD")
+		f, err := os.Create(path + fs + licenseDir + fs + v.repo.Author + "-" + v.repo.Project + "-license.MD")
 		if err != nil {
 			return err
 		}
