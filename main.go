@@ -111,6 +111,9 @@ func getFolders(fullPath, ignore string) []string {
 	ign := strings.Split(ignore, ",")
 	var folders []string
 	checkErr(filepath.Walk(fullPath+".", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		// Return only folders
 		if info.IsDir() {
 			// Skip if folder name is vendor, is hidden (starting with dot, but ignore dot only)
