@@ -4,11 +4,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/ribice/glice/badge.svg?branch=master)](https://coveralls.io/github/ribice/glice?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ribice/glice)](https://goreportcard.com/report/github.com/ribice/glice)
 
-Golang license and dependency checker. Prints list of all dependencies (both from std and 3rd party), number of times used, their license and saves all the license files in /licenses.
+Golang license and dependency checker. Prints list of all dependencies, their URL, license and saves all the license files in /licenses.
 
 ## Introduction
 
-glice analyzes the source code of your project and gets the list of all dependencies (by default only third-party ones, standard library can be enabled with flag) and prints in a tabular format their name, URL (for third-party ones, currently only GitHub is supported) and license short-name (MIT, GPL..).
+glice analyzes the go.mod file of your project and prints it in a tabular format - name, URL, and license short-name (MIT, GPL..).
 
 ## Installation
 
@@ -16,7 +16,7 @@ Download and install glice by executing:
 
 ```bash
     go get github.com/ribice/glice
-    go install github.com/ribice/glice
+    go install github.com/ribice/glice/cmd/glice.go
 ```
 
 To update:
@@ -27,7 +27,7 @@ To update:
 
 ## Usage
 
-To run glice, navigate to a folder in gopath and execute:
+To run glice, navigate to a folder with go.mod and execute:
 
 ```bash
     glice
@@ -36,78 +36,47 @@ To run glice, navigate to a folder in gopath and execute:
 Alternatively, you can provide path which you want to be scanned with -p flag:
 
 ```bash
-    glice -p"github.com/ribice/glice/"
+    glice -p "github.com/ribice/glice"
 ```
 
 By default glice:
 
 - Prints only to stdout
 
-- Gets dependencies and licenses from current directory
+- Gets dependencies and licenses from  go.mod
 
-- Shows only third-party dependencies, grouped under project name (e.g. github.com/author/repo/http and github.com/author/repo/http/middleware are counted as 2 github.com/author/repo, and that's being displayed)
+- Shows only direct dependencies
 
-- Shows only dependencies of project where you're currently located (does not go recursively through dependencies)
-
-- Is limited to 60 API calls on GitHub (up to 60 dependencies from github.com)
-
-- Ignores files in vendor folder
+- Is limited to 60 API calls on GitHub (up to 60 dependencies from github.com). API key can be provided by setting `GITHUB_API_KEY` environment variable.
 
 All flags are optional. Glice supports the following flags:
 
 ```
-- s [boolean - include standard library]// return standard library dependencies as well as third-party ones
-- v [boolean - verbose] // by default, github.com/author/repo/http and github.com/author/repo/http/middleware are counted as 2 times github.com/author/repo, and that's being displayed. With verbose, they are counted and shown separately.
-- r [boolean - recursive] // returns dependencies of dependencies (single level only)
-- f [boolean - fileWrite] // writes all license files inside /licenses folder
-- i [string - ignoreFolders] // list of comma-separated folders that should be ignored
-- p [string - path] // path to be scanned in form of github.com/author/repo/
-- gh [string - githubAPIKey] // used to increase GitHub API's rate limit from 60req/h to 5000req/h
+- f [boolean, fileWrite] // Writes all licenses to /licenses dir
+- i [boolean, indirect] // Parses indirect dependencies as well
+- p [string - path] // Path to be scanned in form of github.com/author/repo
 - t [boolean - thanks] // if GitHub API key is provided, setting this flag will star all GitHub repos from dependency. __In order to do this, API key must have access to public_repo__
-- c [boolean - count] // print usage count of dependencies in packages (max one count per package)
+
 ```
 
 Don't forget `-help` flag for detailed usage information.
 
 ## Sample output
 
-Executing glice -c on github.com/qiangxue/golang-restful-starter-kit prints (with additional colors for links and licenses):
+Executing glice -c on github.com/ribice/glice prints (with additional colors for links and licenses):
 
 ```
-+------------------------------------+-------+--------------------------------------------+---------+
-|             DEPENDENCY             | COUNT |                  REPOURL                   | LICENSE |
-+------------------------------------+-------+--------------------------------------------+---------+
-| fmt                                |     5 |                                            |         |
-| github.com/Sirupsen/logrus         |     2 | https://github.com/Sirupsen/logrus         | MIT     |
-| github.com/go-ozzo/ozzo-dbx        |     3 | https://github.com/go-ozzo/ozzo-dbx        | MIT     |
-| github.com/go-ozzo/ozzo-routing    |     9 | https://github.com/go-ozzo/ozzo-routing    | MIT     |
-| github.com/lib/pq                  |     2 | https://github.com/lib/pq                  | MIT     |
-| net/http                           |     3 |                                            |         |
-| github.com/dgrijalva/jwt-go        |     1 | https://github.com/dgrijalva/jwt-go        | MIT     |
-| strconv                            |     1 |                                            |         |
-| time                               |     2 |                                            |         |
-| database/sql                       |     1 |                                            |         |
-| github.com/go-ozzo/ozzo-validation |     3 | https://github.com/go-ozzo/ozzo-validation | MIT     |
-| github.com/spf13/viper             |     1 | https://github.com/spf13/viper             | MIT     |
-| gopkg.in/yaml.v2                   |     1 |                                            |         |
-| io/ioutil                          |     2 |                                            |         |
-| sort                               |     1 |                                            |         |
-| strings                            |     3 |                                            |         |
-| os                                 |     1 |                                            |         |
-+------------------------------------+-------+--------------------------------------------+---------+
++-----------------------------------+-------------------------------------------+--------------+
+|            DEPENDENCY             |                  REPOURL                  |   LICENSE    |
++-----------------------------------+-------------------------------------------+--------------+
+| github.com/fatih/color            | https://github.com/fatih/color            | MIT          |
+| github.com/google/go-github       | https://github.com/google/go-github       | bsd-3-clause |
+| github.com/keighl/metabolize      | https://github.com/keighl/metabolize      | Other        |
+| github.com/olekukonko/tablewriter | https://github.com/olekukonko/tablewriter | MIT          |
+| golang.org/x/mod                  | https://go.googlesource.com/mod           |              |
+| golang.org/x/oauth2               | https://go.googlesource.com/oauth2        |              |
++-----------------------------------+-------------------------------------------+--------------+
 ```
-
-## To-Do
-
-- [ ] Improve tests and code coverage
-- [ ] Add flag to disable dependencies from test files
-- [ ] Implement license checking for projects hosted on GitLab.com
-- [ ] Implement license checking for projects hosted on Bitbucket.org
-- [ ] Implement license checking for projects hosted on other third party sites (e.g. gitea.io, gogs.io)
-- [x] Add ability to send path of project via flag
-- [ ] Remove dependency on go-github
-- [ ] Implement concurrency
-- [ ] Add naming option when saving licenses to files (currently author-repo-license.MD)
 
 ## License
 
