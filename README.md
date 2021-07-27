@@ -1,6 +1,6 @@
 # glice
 
-[![Build Status](https://travis-ci.org/ribice/glice.svg?branch=master)](https://travis-ci.org/ribice/glice)
+[![Build Status](https://travis-ci.com/ribice/glice.svg?branch=master)](https://travis-ci.org/ribice/glice)
 [![Coverage Status](https://coveralls.io/repos/github/ribice/glice/badge.svg?branch=master)](https://coveralls.io/github/ribice/glice?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ribice/glice)](https://goreportcard.com/report/github.com/ribice/glice)
 
@@ -60,6 +60,10 @@ All flags are optional. Glice supports the following flags:
 ```
 
 Don't forget `-help` flag for detailed usage information.
+
+## Using glice inside as a library
+
+As of v2.0.0 glice can be used as a library and provides few functions/methods that return list of dependencies in structured format and printing to io.Writer.
 
 ## Sample output
 
