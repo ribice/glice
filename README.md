@@ -1,6 +1,6 @@
 # glice
 
-[![Build status](https://github.com/ribice/glice/actions/workflows/CI/badge.svg)](https://github.com/ribice/glice/actions)
+[![Build Status](https://img.shields.io/github/workflow/status/ribice/glice/CI?style=flat-square)](https://github.com/ribice/glice/actions?query=workflow%3ACI)
 [![Coverage Status](https://coveralls.io/repos/github/ribice/glice/badge.svg?branch=master)](https://coveralls.io/github/ribice/glice?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ribice/glice)](https://goreportcard.com/report/github.com/ribice/glice)
 
