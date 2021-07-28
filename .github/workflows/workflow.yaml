@@ -18,7 +18,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.16.6'
+          go-version: 1.16.x
 
       - name: Install dependencies
         run: go get ./...
@@ -26,14 +26,17 @@ jobs:
       - name: Run build
         run: go build .
 
-      - name: Run vet & lint
-        run: |
-          go vet .
+      - name: Run vet
+        run: go vet .
 
       - name: Run testing
-        run: go test ./...
+        run: go test -v -covermode=count -coverprofile=coverage.out ./...
 
-      - name: Coveralls GitHub Action
-        uses: coverallsapp/github-action@1.1.3
+      - name: Convert coverage.out to coverage.lcov
+        uses: jandelgado/gcov2lcov-action@v1.0.6
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@v1.1.3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.github_token }}
+          path-to-lcov: coverage.lcov
