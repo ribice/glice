@@ -8,7 +8,7 @@ Golang license and dependency checker. Prints list of all dependencies, their UR
 
 ## Introduction
 
-glice analyzes the go.mod file of your project and prints it in a tabular format - name, URL, and license short-name (MIT, GPL..).
+glice analyzes the go.mod file of your project and prints it in a tabular format - name, URL, and license short-name (MIT, GPL...).
 
 ## Installation
 
