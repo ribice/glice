@@ -47,6 +47,3 @@ changelog:
     - 'README'
     - Merge pull request
     - Merge branch
-
-git:
-  short_hash: true
