@@ -29,7 +29,7 @@ archives:
         format: zip
     files:
       - README.md
-      - LICENSE
+      - LICENSE.MD
 
 snapshot:
   name_template: SNAPSHOT-{{ .Commit }}
