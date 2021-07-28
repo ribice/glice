@@ -43,10 +43,10 @@ By default glice:
 
 - Prints only to stdout
 
-- Gets dependencies and licenses from  go.mod
+- Gets dependencies from  go.mod
 
-- Shows only direct dependencies
-
+- Fetches licenses for dependencies hosted on GitHub
+  
 - Is limited to 60 API calls on GitHub (up to 60 dependencies from github.com). API key can be provided by setting `GITHUB_API_KEY` environment variable.
 
 All flags are optional. Glice supports the following flags:
