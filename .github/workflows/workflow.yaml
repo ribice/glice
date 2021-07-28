@@ -29,7 +29,9 @@ jobs:
       - name: Run vet & lint
         run: |
           go vet .
-          golint .
 
       - name: Run testing
         run: go test ./...
+
+      - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@1.1.3

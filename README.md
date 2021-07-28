@@ -1,6 +1,6 @@
 # glice
 
-[![Build Status](https://travis-ci.com/ribice/glice.svg?branch=master)](https://travis-ci.org/ribice/glice)
+![Build status](https://github.com/ribice/glice/actions/workflows/workflow.yml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/ribice/glice/badge.svg?branch=master)](https://coveralls.io/github/ribice/glice?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ribice/glice)](https://goreportcard.com/report/github.com/ribice/glice)
 

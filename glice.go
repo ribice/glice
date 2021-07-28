@@ -20,7 +20,10 @@ import (
 )
 
 var (
-	ErrNoGoMod  = errors.New("no go.mod file present")
+	// ErrNoGoMod is returned when path doesn't contain go.mod file
+	ErrNoGoMod = errors.New("no go.mod file present")
+
+	// ErrNoAPIKey is returned when thanks flag is enabled without providing GITHUB_API_KEY env variable
 	ErrNoAPIKey = errors.New("cannot use thanks feature without github api key")
 )
 
@@ -37,8 +40,8 @@ func NewClient(path string) (*Client, error) {
 }
 
 func (c *Client) ParseDependencies(includeIndirect, thanks bool) error {
-	githubApiKey := os.Getenv("GITHUB_API_KEY")
-	if thanks && githubApiKey == "" {
+	githubAPIKey := os.Getenv("GITHUB_API_KEY")
+	if thanks && githubAPIKey == "" {
 		return ErrNoAPIKey
 	}
 	repos, err := ListRepositories(c.path, includeIndirect)
@@ -47,7 +50,7 @@ func (c *Client) ParseDependencies(includeIndirect, thanks bool) error {
 	}
 
 	ctx := context.Background()
-	gitCl := NewGitClient(ctx, map[string]string{"github.com": githubApiKey}, thanks)
+	gitCl := newGitClient(ctx, map[string]string{"github.com": githubAPIKey}, thanks)
 	for _, r := range repos {
 		err = gitCl.GetLicense(ctx, r)
 		if err != nil {

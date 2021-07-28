@@ -37,8 +37,7 @@ type Repository struct {
 	Text      string
 }
 
-// NewGitClient instantiates new GitClient
-func NewGitClient(c context.Context, keys map[string]string, star bool) *gitClient {
+func newGitClient(c context.Context, keys map[string]string, star bool) *gitClient {
 	var tc *http.Client
 	var ghLogged bool
 	if v, _ := keys["github.com"]; v != "" {
