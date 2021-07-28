@@ -15,20 +15,21 @@ builds:
   goarch:
   - amd64
   - 386
+  ldflags:
+  - -s -w
   env:
   - CGO_ENABLED=0
-  main: .
+  main: ./cmd/glice.go
 
-archive:
-  format: tar.gz
-  wrap_in_directory: true
-  format_overrides:
-  - goos: windows
-    format: zip
-  name_template: '{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-  files:
-  - LICENSE
-  - README.md
+archives:
+  - replacements:
+      darwin: macOS
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
 
 snapshot:
   name_template: SNAPSHOT-{{ .Commit }}
