@@ -16,7 +16,7 @@ import (
 	m "github.com/keighl/metabolize"
 	"github.com/olekukonko/tablewriter"
 
-	"github.com/ribice/glice/mod"
+	"github.com/derekbassett/glice/v2/mod"
 )
 
 var (

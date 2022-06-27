@@ -15,14 +15,14 @@ glice analyzes the go.mod file of your project and prints it in a tabular format
 Download and install glice by executing:
 
 ```bash
-    go get github.com/ribice/glice
-    go install github.com/ribice/glice/cmd/glice.go
+    go get github.com/ribice/glice/v2
+    go install github.com/ribice/glice/v2/cmd/glice.go
 ```
 
 To update:
 
 ```bash
-    go get -u github.com/ribice/glice
+    go get -u github.com/ribice/glice/v2
 ```
 
 ## Usage
@@ -45,7 +45,7 @@ By default glice:
 
 - Gets dependencies from  go.mod
 
-- Fetches licenses for dependencies hosted on GitHub
+- Fetch licenses for dependencies hosted on GitHub
   
 - Is limited to 60 API calls on GitHub (up to 60 dependencies from github.com). API key can be provided by setting `GITHUB_API_KEY` environment variable.
 
