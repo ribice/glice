@@ -36,6 +36,7 @@ func NewClient(path string) (*Client, error) {
 	if !mod.Exists(path) {
 		return nil, ErrNoGoMod
 	}
+
 	return &Client{path: path}, nil
 }
 
@@ -49,9 +50,12 @@ func (c *Client) ParseDependencies(includeIndirect, thanks bool) error {
 		return err
 	}
 
+	log.Printf("Found %d dependencies", len(repos))
+
 	ctx := context.Background()
 	gitCl := newGitClient(ctx, map[string]string{"github.com": githubAPIKey}, thanks)
 	for _, r := range repos {
+		log.Printf("Fetching license for: %s", r.URL)
 		err = gitCl.GetLicense(ctx, r)
 		if err != nil {
 			log.Println(err)

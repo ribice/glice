@@ -40,7 +40,7 @@ type Repository struct {
 func newGitClient(c context.Context, keys map[string]string, star bool) *gitClient {
 	var tc *http.Client
 	var ghLogged bool
-	if v, _ := keys["github.com"]; v != "" {
+	if v := keys["github.com"]; v != "" {
 		ts := oauth2.StaticTokenSource(
 			&oauth2.Token{AccessToken: v},
 		)

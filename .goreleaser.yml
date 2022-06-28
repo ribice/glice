@@ -19,7 +19,7 @@ builds:
   - -s -w
   env:
   - CGO_ENABLED=0
-  main: ./cmd/glice.go
+  main: ./cmd/glice/main.go
 
 archives:
   - replacements:
