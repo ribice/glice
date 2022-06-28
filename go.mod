@@ -1,4 +1,4 @@
-module github.com/ribice/glice
+module github.com/ribice/glice/v2
 
 go 1.16
 
