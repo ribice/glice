@@ -55,6 +55,7 @@ All flags are optional. Glice supports the following flags:
 - i [boolean, indirect] // Parses indirect dependencies as well
 - p [string - path] // Path to be scanned in form of github.com/author/repo
 - t [boolean - thanks] // if GitHub API key is provided, setting this flag will star all GitHub repos from dependency. __In order to do this, API key must have access to public_repo__
+- v (boolean - verbose) // If enabled, will log dependencies before fetching and printing them.
 
 ```
 
