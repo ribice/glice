@@ -12,7 +12,7 @@ func main() {
 	var (
 		fileWrite = flag.Bool("f", false, "Write all licenses to files")
 		indirect  = flag.Bool("i", false, "Gets indirect modules as well")
-		path      = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice")`)
+		path      = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/v2")`)
 		thx       = flag.Bool("t", false, "Stars dependent repos. Needs GITHUB_API_KEY env variable to work")
 	)
 

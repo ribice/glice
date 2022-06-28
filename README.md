@@ -15,14 +15,13 @@ glice analyzes the go.mod file of your project and prints it in a tabular format
 Download and install glice by executing:
 
 ```bash
-    go get github.com/ribice/glice
-    go install github.com/ribice/glice/cmd/glice.go
+    go install github.com/ribice/glice/v2/cmd/glice
 ```
 
 To update:
 
 ```bash
-    go get -u github.com/ribice/glice
+    go get -u github.com/ribice/glice/v2
 ```
 
 ## Usage
