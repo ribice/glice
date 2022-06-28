@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ribice/glice"
+	"github.com/ribice/glice/v2"
 )
 
 func main() {
