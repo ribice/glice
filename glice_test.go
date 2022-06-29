@@ -96,6 +96,48 @@ func TestPrint(t *testing.T) {
 	}
 }
 
+func TestPrintTo(t *testing.T) {
+	tests := map[string]struct {
+		path            string
+		format          string
+		wantWriteOutput bool
+		wantErr         bool
+	}{
+		"invalid path": {
+			path:    "invalid",
+			wantErr: true,
+		},
+		"json format": {
+			path:            wd(),
+			wantWriteOutput: true,
+			format:          "json",
+		},
+		"csv format": {
+			path:            wd(),
+			wantWriteOutput: true,
+			format:          "csv",
+		},
+		"valid path": {
+			path:            wd(),
+			wantWriteOutput: true,
+			format:          "table",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			writeTo := &bytes.Buffer{}
+			err := PrintTo(tt.path, tt.format, "stdout", false, writeTo)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Print() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if (writeTo.String() != "") != tt.wantWriteOutput {
+				t.Error("wantWriteOutput and gotOutput do not match")
+			}
+		})
+	}
+}
+
 func TestClient_Print(t *testing.T) {
 	tests := map[string]struct {
 		dependencies []*Repository
