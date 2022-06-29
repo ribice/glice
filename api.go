@@ -2,7 +2,6 @@ package glice
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/fatih/color"
@@ -28,13 +27,14 @@ var licenseCol = map[string]licenseFormat{
 
 // Repository holds information about the repository
 type Repository struct {
-	Name      string
-	Shortname string
-	URL       string
-	Host      string
-	Author    string
-	Project   string
-	Text      string
+	Name      string `json:"name,omitempty"`
+	Shortname string `json:"-"`
+	URL       string `json:"url,omitempty"`
+	Host      string `json:"host,omitempty"`
+	Author    string `json:"author,omitempty"`
+	Project   string `json:"project,omitempty"`
+	Text      string `json:"-"`
+	License   string `json:"license"`
 }
 
 func newGitClient(c context.Context, keys map[string]string, star bool) *gitClient {
@@ -72,7 +72,6 @@ func (gc *gitClient) GetLicense(ctx context.Context, r *Repository) error {
 	case "github.com":
 		rl, _, err := gc.gh.Repositories.License(ctx, r.Author, r.Project)
 		if err != nil {
-			fmt.Println(r.Author, r.Project)
 			return err
 		}
 
@@ -82,6 +81,7 @@ func (gc *gitClient) GetLicense(ctx context.Context, r *Repository) error {
 			clr = color.FgYellow
 		}
 		r.Shortname = color.New(clr).Sprintf(name)
+		r.License = name
 		r.Text = rl.GetContent()
 
 		if gc.star && gc.gh.logged {

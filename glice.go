@@ -3,6 +3,8 @@ package glice
 import (
 	"context"
 	"encoding/base64"
+	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -25,19 +27,41 @@ var (
 
 	// ErrNoAPIKey is returned when thanks flag is enabled without providing GITHUB_API_KEY env variable
 	ErrNoAPIKey = errors.New("cannot use thanks feature without github api key")
+
+	validFormats = map[string]bool{
+		"table": true,
+		"json":  true,
+		"csv":   true,
+	}
+
+	// validOutputs to print to
+	validOutputs = map[string]bool{
+		"stdout": true,
+		"file":   true,
+	}
 )
 
 type Client struct {
 	dependencies []*Repository
 	path         string
+	format       string
+	output       string
 }
 
-func NewClient(path string) (*Client, error) {
+func NewClient(path, format, output string) (*Client, error) {
+	if !validFormats[format] {
+		return nil, fmt.Errorf("invalid format provided (%s) - allowed ones are [table, json, csv]", output)
+	}
+
+	if !validOutputs[output] {
+		return nil, fmt.Errorf("invalid output provided (%s) - allowed ones are [stdout, file]", output)
+	}
+
 	if !mod.Exists(path) {
 		return nil, ErrNoGoMod
 	}
 
-	return &Client{path: path}, nil
+	return &Client{path: path, format: format, output: output}, nil
 }
 
 func (c *Client) ParseDependencies(includeIndirect, thanks bool) error {
@@ -65,20 +89,51 @@ func (c *Client) ParseDependencies(includeIndirect, thanks bool) error {
 	return nil
 }
 
-func (c *Client) Print(output io.Writer) {
+var (
+	headerRow = []string{"Dependency", "RepoURL", "License"}
+)
+
+func (c *Client) Print(writeTo io.Writer) error {
 	if len(c.dependencies) < 1 {
-		return
+		return nil
 	}
-	tw := tablewriter.NewWriter(output)
-	tw.SetHeader([]string{"Dependency", "RepoURL", "License"})
-	for _, d := range c.dependencies {
-		tw.Append([]string{d.Name, color.BlueString(d.URL), d.Shortname})
+
+	switch c.format {
+	case "table":
+		tw := tablewriter.NewWriter(writeTo)
+		tw.SetHeader(headerRow)
+		for _, d := range c.dependencies {
+			tw.Append([]string{d.Name, color.BlueString(d.URL), d.Shortname})
+		}
+		tw.Render()
+	case "json":
+		return json.NewEncoder(writeTo).Encode(c.dependencies)
+	case "csv":
+		csvW := csv.NewWriter(writeTo)
+		defer csvW.Flush()
+		err := csvW.Write(headerRow)
+		if err != nil {
+			return err
+		}
+		for _, d := range c.dependencies {
+			err = csvW.Write([]string{d.Project, d.URL, d.License})
+			if err != nil {
+				return err
+			}
+		}
+		return csvW.Error()
 	}
-	tw.Render()
+
+	// shouldn't be possible to get this error
+	return fmt.Errorf("invalid output provided (%s) - allowed ones are [stdout, json, csv]", c.output)
 }
 
 func Print(path string, indirect bool, writeTo io.Writer) error {
-	c, err := NewClient(path)
+	return PrintTo(path, "table", "stdout", indirect, writeTo)
+}
+
+func PrintTo(path, format, output string, indirect bool, writeTo io.Writer) error {
+	c, err := NewClient(path, format, output)
 	if err != nil {
 		return err
 	}
@@ -98,10 +153,9 @@ func ListRepositories(path string, withIndirect bool) ([]*Repository, error) {
 		return nil, err
 	}
 
-	var repos []*Repository
-
-	for _, mods := range modules {
-		repos = append(repos, getRepository(mods))
+	repos := make([]*Repository, len(modules))
+	for i, mods := range modules {
+		repos[i] = getRepository(mods)
 	}
 
 	return repos, nil
