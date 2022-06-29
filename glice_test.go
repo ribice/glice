@@ -46,7 +46,7 @@ func TestClient_ParseDependencies(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			c := &Client{path: tt.path}
+			c := &Client{path: tt.path, format: "table", output: "stdout"}
 			if err := c.ParseDependencies(tt.includeIndirect, tt.thanks); (err != nil) != tt.wantErr {
 				t.Errorf("ParseDependencies() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -67,7 +67,6 @@ func TestClient_ParseDependencies(t *testing.T) {
 }
 
 func TestPrint(t *testing.T) {
-
 	tests := map[string]struct {
 		path            string
 		wantWriteOutput bool
@@ -110,7 +109,7 @@ func TestClient_Print(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			c := &Client{dependencies: tt.dependencies}
+			c := &Client{dependencies: tt.dependencies, format: "table", output: "stdout"}
 			output := &bytes.Buffer{}
 			c.Print(output)
 			if (output.String() != "") != tt.wantOutput {
@@ -150,7 +149,7 @@ func TestClient_WriteLicensesToFile(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			c := &Client{dependencies: tt.dependencies}
+			c := &Client{dependencies: tt.dependencies, format: "table", output: "stdout"}
 			err := c.WriteLicensesToFile()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Print() error = %v, wantErr %v", err, tt.wantErr)
@@ -202,19 +201,34 @@ func TestListRepositories(t *testing.T) {
 func TestNewClient(t *testing.T) {
 	tests := map[string]struct {
 		path    string
+		output  string
+		format  string
 		wantErr bool
 	}{
+		"invalid format": {
+			format:  "invalid",
+			wantErr: true,
+		},
+		"invalid output": {
+			format:  "csv",
+			output:  "invalid",
+			wantErr: true,
+		},
 		"invalid path": {
+			format:  "csv",
+			output:  "stdout",
 			path:    "invalid",
 			wantErr: true,
 		},
-		"valid path": {
-			path: wd(),
+		"invalid  path": {
+			format: "csv",
+			output: "stdout",
+			path:   wd(),
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err := NewClient(tt.path)
+			_, err := NewClient(tt.path, tt.format, tt.output)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewClient() error = %v, wantErr %v", err, tt.wantErr)
 				return

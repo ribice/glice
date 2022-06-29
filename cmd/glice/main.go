@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -16,6 +17,13 @@ func main() {
 		path      = flag.String("p", "", `Path of desired directory to be scanned with Glice (e.g. "github.com/ribice/glice/v2")`)
 		thx       = flag.Bool("t", false, "Stars dependent repos. Needs GITHUB_API_KEY env variable to work")
 		verbose   = flag.Bool("v", false, "Adds verbose logging")
+		format    = flag.String("fmt", "table", "Output format [table | json | csv]")
+		output    = flag.String("o", "stdout", "Output location [stdout | file]")
+		extension = map[string]string{
+			"table": "txt",
+			"json":  "json",
+			"csv":   "csv",
+		}
 	)
 
 	flag.Parse()
@@ -31,12 +39,21 @@ func main() {
 		log.SetFlags(0)
 	}
 
-	cl, err := glice.NewClient(*path)
+	cl, err := glice.NewClient(*path, *format, *output)
 	checkErr(err)
 
 	checkErr(cl.ParseDependencies(*indirect, *thx))
 
-	cl.Print(os.Stdout)
+	switch *output {
+	case "stdout":
+		cl.Print(os.Stdout)
+	case "file":
+		fileName := fmt.Sprintf("dependencies.%s", extension[*format])
+		f, err := os.Create(fileName)
+		checkErr(err)
+		cl.Print(f)
+		f.Close()
+	}
 
 	if *fileWrite {
 		checkErr(cl.WriteLicensesToFile())

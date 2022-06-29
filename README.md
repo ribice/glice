@@ -8,7 +8,7 @@ Golang license and dependency checker. Prints list of all dependencies, their UR
 
 ## Introduction
 
-glice analyzes the go.mod file of your project and prints it in a tabular format - name, URL, and license short-name (MIT, GPL...).
+glice analyzes the go.mod file of your project and prints it in a tabular format [csv and json available as well] - name, URL, and license short-name (MIT, GPL...). 
 
 ## Installation
 
@@ -40,9 +40,9 @@ Alternatively, you can provide path which you want to be scanned with -p flag:
 
 By default glice:
 
-- Prints only to stdout
+- Prints to stdout
 
-- Gets dependencies from  go.mod
+- Gets dependencies from go.mod
 
 - Fetches licenses for dependencies hosted on GitHub
   
@@ -56,7 +56,8 @@ All flags are optional. Glice supports the following flags:
 - p [string - path] // Path to be scanned in form of github.com/author/repo
 - t [boolean - thanks] // if GitHub API key is provided, setting this flag will star all GitHub repos from dependency. __In order to do this, API key must have access to public_repo__
 - v (boolean - verbose) // If enabled, will log dependencies before fetching and printing them.
-
+- fmt (string - format) // Format of the output. Defaults to table, other available options are `csv` and `json`.
+- o (string - otuput) // Destination of the output, defaults to stdout. Other option is `file`.
 ```
 
 Don't forget `-help` flag for detailed usage information.
