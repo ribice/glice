@@ -89,4 +89,4 @@ glice is licensed under the MIT license. Check the [LICENSE](LICENSE.md) file fo
 
 ## Author
 
-[Emir Ribic](https://ribice.ba)
+[Emir Ribic](https://dev.ribic.ba)
